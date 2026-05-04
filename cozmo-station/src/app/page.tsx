@@ -47,7 +47,7 @@ export default function Home() {
           </h1>
           
           <p className="mx-auto mt-6 max-w-2xl text-lg tracking-tight text-gray-600">
-            Elevate your glow with Cozmo Station. We curate the world's finest skincare, bringing you the perfect synergy of advanced Korean formulas and trusted German dermatological science.
+            Elevate your glow with Cozmo Station. We curate the world&apos;s finest skincare, bringing you the perfect synergy of advanced Korean formulas and trusted German dermatological science.
           </p>
           
           <div className="mt-10 flex justify-center gap-x-6">
