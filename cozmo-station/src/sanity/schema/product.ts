@@ -40,12 +40,15 @@ export default defineType({
       validation: (Rule) => Rule.required(),
     }),
     defineField({
-      name: 'mainImage',
-      title: 'Main image',
-      type: 'image',
-      options: {
-        hotspot: true,
-      },
+      name: 'images',
+      title: 'Images',
+      type: 'array',
+      of: [
+        {
+          type: 'image',
+          options: { hotspot: true }
+        }
+      ],
     }),
     defineField({
       name: 'description',
@@ -58,7 +61,7 @@ export default defineType({
     select: {
       title: 'title',
       origin: 'origin',
-      media: 'mainImage',
+      media: 'images.0',
     },
     prepare(selection) {
       const { origin } = selection
