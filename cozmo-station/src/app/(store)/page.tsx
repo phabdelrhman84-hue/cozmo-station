@@ -14,7 +14,7 @@ interface Product {
 
 // Fetch products from Sanity
 async function getFeaturedProducts() {
-  const query = `*[_type == "product"] | order(_createdAt desc)[0...4] {
+  const query = `*[_type == "product"] | order(_createdAt desc) {
     _id,
     title,
     price,
