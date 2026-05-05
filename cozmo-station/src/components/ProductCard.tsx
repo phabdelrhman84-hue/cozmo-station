@@ -33,7 +33,7 @@ export default function ProductCard({ brand, title, price, imageUrl, index = 0 }
         <div className="absolute inset-x-4 bottom-4 translate-y-8 opacity-0 transition-all duration-500 ease-out group-hover:translate-y-0 group-hover:opacity-100 hidden sm:block">
           <button className="w-full flex items-center justify-center gap-2 bg-gray-900/95 backdrop-blur-md px-4 py-3.5 text-sm font-medium text-white shadow-xl transition-all hover:bg-black hover:scale-[1.02]">
             <Plus className="h-4 w-4" />
-            Add to Bag
+            Get Glowing Now
           </button>
         </div>
       </div>
