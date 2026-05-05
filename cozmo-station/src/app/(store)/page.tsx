@@ -4,6 +4,14 @@ import ProductCard from '@/components/ProductCard';
 import { client } from '@/sanity/lib/client';
 import { urlFor } from '@/sanity/lib/image';
 
+interface Product {
+  _id: string;
+  title: string;
+  price: number;
+  origin: string;
+  images?: Array<{ asset: { _ref: string } }>;
+}
+
 // Fetch products from Sanity
 async function getFeaturedProducts() {
   const query = `*[_type == "product"] | order(_createdAt desc)[0...4] {
@@ -94,7 +102,7 @@ export default async function Home() {
 
           {featuredProducts.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-12 md:gap-y-16">
-              {featuredProducts.map((product: any, index: number) => {
+              {featuredProducts.map((product: Product, index: number) => {
                 // Determine a display brand based on origin if brand isn't explicitly available
                 const displayBrand = product.origin === 'korean' ? 'K-Beauty' : product.origin === 'german' ? 'German Science' : 'Cozmo Station';
                 
