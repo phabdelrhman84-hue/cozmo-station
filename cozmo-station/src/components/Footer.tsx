@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import { Instagram, Facebook, Twitter } from 'lucide-react';
 
 export default function Footer() {
   return (
@@ -63,18 +62,26 @@ export default function Footer() {
           <p className="text-sm text-center text-gray-400">
             &copy; {new Date().getFullYear()} Cozmo Station. All rights reserved.
           </p>
-          <div className="flex gap-4">
-            <a href="#" className="text-gray-400 hover:text-gray-900 transition-colors">
-              <span className="sr-only">Instagram</span>
-              <Instagram className="h-5 w-5" />
+          <div className="flex gap-5">
+            {/* Instagram */}
+            <a href="#" aria-label="Instagram" className="text-gray-400 hover:text-gray-900 transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <rect width="20" height="20" x="2" y="2" rx="5" ry="5"/>
+                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+                <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>
+              </svg>
             </a>
-            <a href="#" className="text-gray-400 hover:text-gray-900 transition-colors">
-              <span className="sr-only">Facebook</span>
-              <Facebook className="h-5 w-5" />
+            {/* Facebook */}
+            <a href="#" aria-label="Facebook" className="text-gray-400 hover:text-gray-900 transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
+              </svg>
             </a>
-            <a href="#" className="text-gray-400 hover:text-gray-900 transition-colors">
-              <span className="sr-only">Twitter</span>
-              <Twitter className="h-5 w-5" />
+            {/* TikTok */}
+            <a href="#" aria-label="TikTok" className="text-gray-400 hover:text-gray-900 transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"/>
+              </svg>
             </a>
           </div>
         </div>

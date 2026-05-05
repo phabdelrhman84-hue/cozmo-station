@@ -6,6 +6,7 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair" });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://cozmostation.com"), // update to real deployed URL
   title: {
     template: "%s | Cozmo Station",
     default: "Cozmo Station | Premium Korean & German Skincare",
