@@ -13,7 +13,7 @@ export default function AdminProducts() {
     if (selectedProducts.length === demoProducts.length) {
       setSelectedProducts([]);
     } else {
-      setSelectedProducts(demoProducts.map((p) => p.id));
+      setSelectedProducts(demoProducts.map((p) => p.id.toString()));
     }
   };
 
@@ -90,8 +90,8 @@ export default function AdminProducts() {
                     <input
                       type="checkbox"
                       className="rounded border-[#2A2E3B] bg-[#1A1D27] text-[#7C6FFF] focus:ring-[#7C6FFF]"
-                      checked={selectedProducts.includes(product.id)}
-                      onChange={() => toggleSelectProduct(product.id)}
+                      checked={selectedProducts.includes(product.id.toString())}
+                      onChange={() => toggleSelectProduct(product.id.toString())}
                     />
                   </td>
                   <td className="px-6 py-4">
