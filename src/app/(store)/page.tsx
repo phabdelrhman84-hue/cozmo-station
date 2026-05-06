@@ -8,6 +8,8 @@ import ReviewsSection from "@/components/store/ReviewsSection";
 import FreeShippingBar from "@/components/store/FreeShippingBar";
 import CategoriesSection from "@/components/store/CategoriesSection";
 import { demoProducts } from "@/lib/data";
+import { supabase } from "@/lib/supabase";
+import { useState, useEffect } from "react";
 import {
   Sparkles,
   Truck,
@@ -22,6 +24,24 @@ export default function HomePage() {
   const { locale, t } = useLanguage();
   const featuredProducts = demoProducts.filter((p) => p.is_featured);
   const Arrow = locale === "ar" ? ArrowLeft : ArrowRight;
+
+  const [themeSections, setThemeSections] = useState<any[]>([]);
+
+  useEffect(() => {
+    async function fetchTheme() {
+      const { data } = await supabase.from('site_content').select('*').order('order_index', { ascending: true });
+      if (data) {
+        setThemeSections(data);
+      }
+    }
+    fetchTheme();
+  }, []);
+
+  const getSection = (type: string) => themeSections.find(s => s.type === type);
+  const heroSection = getSection('hero');
+  const featuredSection = getSection('featured_products');
+  const bannerSection = getSection('banner');
+  const categoriesSection = getSection('categories');
 
 
 
@@ -59,6 +79,7 @@ export default function HomePage() {
   return (
     <div>
       {/* ===== HERO SECTION ===== */}
+      {(!heroSection || heroSection.is_visible) && (
       <section className="relative overflow-hidden bg-gradient-to-br from-beige via-beige-light to-pink-light/20 min-h-[70vh] flex items-center">
         {/* Decorative Elements */}
         <div className="absolute top-20 start-10 w-72 h-72 bg-pink/10 rounded-full blur-3xl" />
@@ -76,14 +97,14 @@ export default function HomePage() {
                   : "Authentic K-Beauty"}
               </span>
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-charcoal leading-tight mb-6">
-                {t("hero.title")}
+                {heroSection ? (locale === 'ar' ? heroSection.content.title_ar : heroSection.content.title_en) : t("hero.title")}
               </h1>
               <p className="text-lg text-warm-gray leading-relaxed mb-8 max-w-xl">
-                {t("hero.subtitle")}
+                {heroSection ? (locale === 'ar' ? heroSection.content.subtitle_ar : heroSection.content.subtitle_en) : t("hero.subtitle")}
               </p>
               <div className="flex flex-wrap gap-4">
                 <Link href="/products" className="btn-primary text-lg px-8 py-4">
-                  {t("hero.cta")}
+                  {heroSection ? (locale === 'ar' ? heroSection.content.button_text_ar : heroSection.content.button_text_en) : t("hero.cta")}
                   <Arrow
                     size={18}
                     className="inline ms-2"
@@ -154,6 +175,7 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+      )}
 
       {/* ===== FREE SHIPPING BAR ===== */}
       <FreeShippingBar />
@@ -183,15 +205,31 @@ export default function HomePage() {
       </section>
 
       {/* ===== CATEGORIES ===== */}
-      <CategoriesSection />
+      {(!categoriesSection || categoriesSection.is_visible) && <CategoriesSection />}
+
+      {/* ===== BANNER ===== */}
+      {bannerSection && bannerSection.is_visible && (
+        <section className="py-8 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <Link href={bannerSection.content.link || "/products"}>
+              <div className="bg-gradient-to-r from-[#7C6FFF] to-[#E8A0BF] text-white p-8 md:p-12 rounded-2xl text-center shadow-lg hover:shadow-xl transition-shadow cursor-pointer">
+                <h3 className="text-2xl md:text-3xl font-bold mb-2">
+                  {locale === 'ar' ? bannerSection.content.text_ar : bannerSection.content.text_en}
+                </h3>
+              </div>
+            </Link>
+          </div>
+        </section>
+      )}
 
       {/* ===== FEATURED PRODUCTS ===== */}
+      {(!featuredSection || featuredSection.is_visible) && (
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between mb-10">
             <div>
               <h2 className="text-3xl font-bold text-charcoal">
-                {locale === "ar" ? "منتجات مميزة" : "Featured Products"}
+                {featuredSection ? (locale === 'ar' ? featuredSection.content.title_ar : featuredSection.content.title_en) : (locale === "ar" ? "منتجات مميزة" : "Featured Products")}
               </h2>
               <p className="text-warm-gray mt-1">
                 {locale === "ar"
@@ -214,6 +252,7 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+      )}
 
       {/* ===== ROUTINE BUILDER (AOV Booster) ===== */}
       <RoutineBuilder />

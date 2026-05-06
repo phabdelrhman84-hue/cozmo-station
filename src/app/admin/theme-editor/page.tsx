@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
 import { 
   Layout, 
   Image as ImageIcon, 
@@ -90,14 +91,60 @@ export default function ThemeEditor() {
   const [deviceView, setDeviceView] = useState<"desktop" | "mobile">("desktop");
   const [isSaving, setIsSaving] = useState(false);
 
+  useEffect(() => {
+    fetchSections();
+  }, []);
+
+  const fetchSections = async () => {
+    const { data, error } = await supabase
+      .from('site_content')
+      .select('*')
+      .order('order_index', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching sections:', error);
+      return;
+    }
+
+    if (data && data.length > 0) {
+      const formattedSections: ThemeSection[] = data.map(item => ({
+        id: item.section_id,
+        type: item.type as SectionType,
+        name: item.name,
+        visible: item.is_visible,
+        order: item.order_index,
+        content: item.content
+      }));
+      setSections(formattedSections);
+      setActiveSection(formattedSections[0]);
+    }
+  };
+
   const handleSave = async () => {
     setIsSaving(true);
-    // In a real app, this would save to Supabase site_content table
-    console.log("Saving sections to Supabase site_content:", sections);
-    setTimeout(() => {
-      setIsSaving(false);
-      alert("Theme saved successfully!");
-    }, 1000);
+    
+    // Format sections for Supabase
+    const sectionsToUpsert = sections.map((section, index) => ({
+      section_id: section.id,
+      type: section.type,
+      name: section.name,
+      is_visible: section.visible,
+      order_index: index + 1, // update order based on array position
+      content: section.content
+    }));
+
+    const { error } = await supabase
+      .from('site_content')
+      .upsert(sectionsToUpsert, { onConflict: 'section_id' });
+
+    setIsSaving(false);
+    
+    if (error) {
+      console.error('Error saving sections:', error);
+      alert("Failed to save theme. Please try again.");
+    } else {
+      alert("Theme saved successfully to Supabase!");
+    }
   };
 
   const updateSectionContent = (field: string, value: any) => {
