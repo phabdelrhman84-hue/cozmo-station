@@ -1,0 +1,127 @@
+{
+  "site": {
+    "name": "Cozmo Station",
+    "tagline": "Your Korean Skincare Destination",
+    "currency": "EGP"
+  },
+  "nav": {
+    "home": "Home",
+    "products": "Products",
+    "about": "About",
+    "contact": "Contact",
+    "cart": "Cart",
+    "search": "Search products...",
+    "login": "Login"
+  },
+  "hero": {
+    "title": "Discover the Secret of Korean Skin",
+    "subtitle": "100% authentic skincare products from the top Korean brands — delivered across Egypt",
+    "cta": "Shop Now",
+    "secondary_cta": "Learn More"
+  },
+  "products": {
+    "title": "Our Products",
+    "all": "All",
+    "skincare": "Skincare",
+    "haircare": "Haircare",
+    "filter": "Filter",
+    "sort": "Sort",
+    "sort_price_asc": "Price: Low to High",
+    "sort_price_desc": "Price: High to Low",
+    "sort_newest": "Newest",
+    "sort_name": "Name",
+    "no_products": "No products found",
+    "add_to_cart": "Add to Cart",
+    "added": "Added ✓",
+    "out_of_stock": "Out of Stock",
+    "new": "New",
+    "sale": "Sale",
+    "featured": "Featured",
+    "ingredients": "Ingredients",
+    "description": "Description",
+    "related": "You May Also Like"
+  },
+  "cart": {
+    "title": "Shopping Cart",
+    "empty": "Your cart is empty",
+    "empty_desc": "Explore our products and add what you love",
+    "browse": "Browse Products",
+    "subtotal": "Subtotal",
+    "shipping": "Shipping",
+    "total": "Total",
+    "checkout": "Checkout",
+    "remove": "Remove",
+    "free_shipping": "Free shipping on orders over 999 EGP",
+    "free_shipping_remaining": "Add {amount} EGP for free shipping"
+  },
+  "checkout": {
+    "title": "Checkout",
+    "step1": "Personal Info",
+    "step2": "Shipping Address",
+    "step3": "Shipping Method",
+    "step4": "Payment",
+    "name": "Full Name",
+    "email": "Email Address",
+    "phone": "Phone Number",
+    "address": "Detailed Address",
+    "city": "City",
+    "governorate": "Governorate",
+    "notes": "Notes (optional)",
+    "cod": "Cash on Delivery",
+    "paypal": "PayPal",
+    "place_order": "Place Order",
+    "order_summary": "Order Summary",
+    "next": "Next",
+    "back": "Back",
+    "success_title": "Order Placed Successfully! 🎉",
+    "success_msg": "Thank you! We'll contact you shortly"
+  },
+  "footer": {
+    "about": "Cozmo Station is your premier destination for Korean skincare in Egypt. We bring you the best authentic products directly from South Korea.",
+    "links": "Quick Links",
+    "legal": "Legal",
+    "privacy": "Privacy Policy",
+    "terms": "Terms & Conditions",
+    "returns": "Returns & Exchanges",
+    "newsletter": "Newsletter",
+    "newsletter_desc": "Subscribe for the latest products and exclusive offers",
+    "subscribe": "Subscribe",
+    "email_placeholder": "Your email",
+    "rights": "All rights reserved"
+  },
+  "about": {
+    "title": "About Us",
+    "story_title": "Our Story",
+    "story": "Cozmo Station was born from a genuine passion for Korean skincare. We believe everyone deserves healthy, radiant skin, which is why we carefully curate the best authentic Korean products and deliver them to you anywhere in Egypt.",
+    "mission_title": "Our Mission",
+    "mission": "To provide the best Korean skincare products at affordable prices with fast delivery across all Egyptian governorates.",
+    "values_title": "Our Values",
+    "value1_title": "100% Authentic",
+    "value1": "All our products are genuine and directly imported",
+    "value2_title": "Quality Guaranteed",
+    "value2": "We test every product before adding it to our store",
+    "value3_title": "Outstanding Service",
+    "value3": "Our team is ready to help you find the perfect product"
+  },
+  "contact": {
+    "title": "Contact Us",
+    "subtitle": "We'd love to hear from you! Send us a message and we'll respond as soon as possible",
+    "name": "Your Name",
+    "email": "Your Email",
+    "message": "Your Message",
+    "send": "Send",
+    "sent": "Message sent successfully!"
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "content": "At Cozmo Station, we respect your privacy and are committed to protecting your personal data. This policy explains how we collect, use, and protect your information.\n\n**Data Collection:** We collect information that you provide when placing an order, such as your name, email address, phone number, and shipping address.\n\n**Data Usage:** We use your data solely to process your orders and improve your shopping experience.\n\n**Data Protection:** We use advanced security technologies to protect your personal data.\n\n**Data Sharing:** We do not sell or share your data with third parties except when necessary to deliver your order."
+  },
+  "terms": {
+    "title": "Terms & Conditions",
+    "content": "By using the Cozmo Station website, you agree to the following terms and conditions:\n\n**Orders:** All prices are displayed in Egyptian Pounds (EGP) and include all applicable taxes. We reserve the right to change prices at any time.\n\n**Shipping:** Delivery time varies by governorate. We do our best to deliver your order as quickly as possible.\n\n**Products:** All products are 100% authentic. Displayed images are representative and actual colors may vary slightly.\n\n**Liability:** We are not responsible for any allergic reactions. It is recommended to perform a patch test before use."
+  },
+  "returns": {
+    "title": "Returns & Exchanges",
+    "content": "We strive for your complete satisfaction. Here is our return and exchange policy:\n\n**Return Period:** You can return the product within 7 days of receiving it.\n\n**Return Conditions:** The product must be in its original condition, unopened and unused, with the original packaging.\n\n**Exchanges:** You can exchange the product for another of equal or higher value by paying the difference.\n\n**Refunds:** Refunds are processed within 5-7 business days of receiving the returned product.\n\n**Exceptions:** Opened or used products cannot be returned for hygiene reasons."
+  }
+}
