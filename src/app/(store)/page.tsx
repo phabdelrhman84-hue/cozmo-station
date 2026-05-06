@@ -3,6 +3,10 @@
 import Link from "next/link";
 import { useLanguage } from "@/hooks/useLanguage";
 import ProductCard from "@/components/store/ProductCard";
+import RoutineBuilder from "@/components/store/RoutineBuilder";
+import ReviewsSection from "@/components/store/ReviewsSection";
+import FreeShippingBar from "@/components/store/FreeShippingBar";
+import CategoriesSection from "@/components/store/CategoriesSection";
 import { demoProducts } from "@/lib/data";
 import {
   Sparkles,
@@ -11,8 +15,6 @@ import {
   Star,
   ArrowLeft,
   ArrowRight,
-  Droplets,
-  Sun,
   Heart,
 } from "lucide-react";
 
@@ -21,34 +23,7 @@ export default function HomePage() {
   const featuredProducts = demoProducts.filter((p) => p.is_featured);
   const Arrow = locale === "ar" ? ArrowLeft : ArrowRight;
 
-  const categories = [
-    {
-      id: "skincare",
-      icon: <Droplets size={32} />,
-      label_ar: "العناية بالبشرة",
-      label_en: "Skincare",
-      count: demoProducts.filter((p) => p.category === "Skincare").length,
-      gradient: "from-pink-light/40 to-pink/20",
-    },
-    {
-      id: "haircare",
-      icon: <Sparkles size={32} />,
-      label_ar: "العناية بالشعر",
-      label_en: "Haircare",
-      count: demoProducts.filter((p) => p.category === "Haircare").length,
-      gradient: "from-sage-light/40 to-sage/20",
-    },
-    {
-      id: "suncare",
-      icon: <Sun size={32} />,
-      label_ar: "الحماية من الشمس",
-      label_en: "Sun Protection",
-      count: demoProducts.filter((p) =>
-        p.name_en.toLowerCase().includes("sun")
-      ).length,
-      gradient: "from-warning/20 to-warning/10",
-    },
-  ];
+
 
   const trustBadges = [
     {
@@ -180,6 +155,9 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ===== FREE SHIPPING BAR ===== */}
+      <FreeShippingBar />
+
       {/* ===== TRUST BADGES ===== */}
       <section className="py-12 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -205,37 +183,7 @@ export default function HomePage() {
       </section>
 
       {/* ===== CATEGORIES ===== */}
-      <section className="py-16 bg-beige-light">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl font-bold text-charcoal">
-              {locale === "ar" ? "تسوق حسب الفئة" : "Shop by Category"}
-            </h2>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            {categories.map((cat) => (
-              <Link
-                key={cat.id}
-                href={`/products?category=${cat.id}`}
-                className="group"
-              >
-                <div
-                  className={`bg-gradient-to-br ${cat.gradient} rounded-2xl p-8 text-center hover:shadow-lg transition-all group-hover:scale-[1.02]`}
-                >
-                  <div className="text-pink-dark mb-3">{cat.icon}</div>
-                  <h3 className="text-xl font-bold text-charcoal mb-1">
-                    {locale === "ar" ? cat.label_ar : cat.label_en}
-                  </h3>
-                  <p className="text-warm-gray text-sm">
-                    {cat.count}{" "}
-                    {locale === "ar" ? "منتجات" : "Products"}
-                  </p>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
+      <CategoriesSection />
 
       {/* ===== FEATURED PRODUCTS ===== */}
       <section className="py-16 bg-white">
@@ -267,6 +215,9 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ===== ROUTINE BUILDER (AOV Booster) ===== */}
+      <RoutineBuilder />
+
       {/* ===== NEW ARRIVALS ===== */}
       <section className="py-16 bg-beige-light">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -291,6 +242,9 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ===== REVIEWS ===== */}
+      <ReviewsSection />
 
       {/* ===== CTA BANNER ===== */}
       <section className="py-16 bg-gradient-to-r from-charcoal to-charcoal/90 text-white">
