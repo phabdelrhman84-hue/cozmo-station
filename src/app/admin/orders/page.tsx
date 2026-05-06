@@ -92,9 +92,20 @@ export default function AdminOrders() {
                   </td>
                   <td className="px-6 py-4 uppercase text-xs font-bold">{order.payment}</td>
                   <td className="px-6 py-4">
-                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusColor(order.status)} capitalize`}>
-                      {order.status}
-                    </span>
+                    <select
+                      className={`px-2.5 py-1 rounded-full text-xs font-medium border appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#7C6FFF] ${getStatusColor(order.status)} capitalize`}
+                      defaultValue={order.status}
+                      onChange={(e) => {
+                        // Here you would typically trigger an API call to update the status
+                        console.log(`Update order ${order.id} status to ${e.target.value}`);
+                      }}
+                    >
+                      <option value="pending" className="bg-[#1A1D27] text-white">Pending</option>
+                      <option value="processing" className="bg-[#1A1D27] text-white">Processing</option>
+                      <option value="shipped" className="bg-[#1A1D27] text-white">Shipped</option>
+                      <option value="delivered" className="bg-[#1A1D27] text-white">Delivered</option>
+                      <option value="cancelled" className="bg-[#1A1D27] text-white">Cancelled</option>
+                    </select>
                   </td>
                   <td className="px-6 py-4 text-right">
                     <button className="p-1.5 text-gray-400 hover:text-white hover:bg-white/10 rounded transition-colors inline-flex">

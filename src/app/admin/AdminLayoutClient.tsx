@@ -16,6 +16,7 @@ import {
   Menu,
   X,
   Store,
+  Paintbrush,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 
@@ -58,6 +59,7 @@ export default function AdminLayoutClient({
     { href: "/admin/customers", label: "Customers", icon: <Users size={20} /> },
     { href: "/admin/analytics", label: "Analytics", icon: <LineChart size={20} /> },
     { href: "/admin/marketing", label: "Marketing", icon: <Megaphone size={20} /> },
+    { href: "/admin/theme-editor", label: "Theme Editor", icon: <Paintbrush size={20} /> },
     { href: "/admin/settings", label: "Settings", icon: <Settings size={20} /> },
   ];
 

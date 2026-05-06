@@ -1,12 +1,29 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Search, Filter, Edit, Trash2, MoreVertical } from "lucide-react";
+import { Plus, Search, Filter, Edit, Trash2, MoreVertical, Eye, CheckSquare } from "lucide-react";
 import { demoProducts } from "@/lib/data";
 import { formatPriceEn } from "@/lib/utils";
 
 export default function AdminProducts() {
   const [search, setSearch] = useState("");
+  const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
+
+  const toggleSelectAll = () => {
+    if (selectedProducts.length === demoProducts.length) {
+      setSelectedProducts([]);
+    } else {
+      setSelectedProducts(demoProducts.map((p) => p.id));
+    }
+  };
+
+  const toggleSelectProduct = (id: string) => {
+    if (selectedProducts.includes(id)) {
+      setSelectedProducts(selectedProducts.filter((pid) => pid !== id));
+    } else {
+      setSelectedProducts([...selectedProducts, id]);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -32,6 +49,12 @@ export default function AdminProducts() {
             />
           </div>
           <div className="flex gap-2">
+            {selectedProducts.length > 0 && (
+              <button className="px-4 py-2 bg-white/10 border border-[#2A2E3B] rounded-lg text-white hover:bg-white/20 flex items-center gap-2">
+                <Edit size={18} />
+                Bulk Edit ({selectedProducts.length})
+              </button>
+            )}
             <button className="px-4 py-2 bg-[#0F1117] border border-[#2A2E3B] rounded-lg text-gray-300 hover:text-white flex items-center gap-2">
               <Filter size={18} />
               Filter
@@ -44,6 +67,14 @@ export default function AdminProducts() {
           <table className="w-full text-left text-sm text-gray-400">
             <thead className="bg-[#0F1117]/50 text-gray-300 uppercase font-medium">
               <tr>
+                <th className="px-6 py-4 w-12">
+                  <input
+                    type="checkbox"
+                    className="rounded border-[#2A2E3B] bg-[#1A1D27] text-[#7C6FFF] focus:ring-[#7C6FFF]"
+                    checked={selectedProducts.length === demoProducts.length && demoProducts.length > 0}
+                    onChange={toggleSelectAll}
+                  />
+                </th>
                 <th className="px-6 py-4">Product</th>
                 <th className="px-6 py-4">Status</th>
                 <th className="px-6 py-4">Inventory</th>
@@ -55,6 +86,14 @@ export default function AdminProducts() {
             <tbody className="divide-y divide-[#2A2E3B]">
               {demoProducts.map((product) => (
                 <tr key={product.id} className="hover:bg-white/5 transition-colors">
+                  <td className="px-6 py-4">
+                    <input
+                      type="checkbox"
+                      className="rounded border-[#2A2E3B] bg-[#1A1D27] text-[#7C6FFF] focus:ring-[#7C6FFF]"
+                      checked={selectedProducts.includes(product.id)}
+                      onChange={() => toggleSelectProduct(product.id)}
+                    />
+                  </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded bg-[#2A2E3B] flex items-center justify-center flex-shrink-0">
@@ -90,7 +129,10 @@ export default function AdminProducts() {
                   <td className="px-6 py-4">{product.category}</td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <button className="p-1.5 text-gray-400 hover:text-white hover:bg-white/10 rounded transition-colors">
+                      <button className="p-1.5 text-gray-400 hover:text-white hover:bg-white/10 rounded transition-colors" title="Quick Preview">
+                        <Eye size={16} />
+                      </button>
+                      <button className="p-1.5 text-gray-400 hover:text-white hover:bg-white/10 rounded transition-colors" title="Edit">
                         <Edit size={16} />
                       </button>
                       <button className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-400/10 rounded transition-colors">
