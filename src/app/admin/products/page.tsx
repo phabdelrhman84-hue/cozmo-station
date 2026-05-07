@@ -1,21 +1,17 @@
-"use client";
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import Link from "next/link";
 import { Plus, Search, Filter, Edit, Trash2, MoreVertical, Eye, CheckSquare, Download } from "lucide-react";
-import { demoProducts } from "@/lib/data";
 import { formatPriceEn } from "@/lib/utils";
-
 import { supabase } from "@/lib/supabase";
-import { useEffect } from "react";
-
-import AddProductModal from "@/components/admin/AddProductModal";
+import ProductModal from "@/components/admin/ProductModal";
 
 export default function AdminProducts() {
   const [search, setSearch] = useState("");
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<any>(null);
   const [importing, setImporting] = useState(false);
 
   useEffect(() => {
@@ -76,6 +72,18 @@ export default function AdminProducts() {
     reader.readAsText(file);
   };
 
+  const handleEdit = (product: any) => {
+    setEditingProduct(product);
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this product?")) return;
+    const { error } = await supabase.from('products').delete().eq('id', id);
+    if (error) alert("Failed to delete product");
+    else fetchProducts();
+  };
+
   const displayProducts = products.filter(p => 
     p.name_en?.toLowerCase().includes(search.toLowerCase()) || 
     p.name_ar?.includes(search) ||
@@ -91,11 +99,9 @@ export default function AdminProducts() {
   };
 
   const toggleSelectProduct = (id: string) => {
-    if (selectedProducts.includes(id)) {
-      setSelectedProducts(selectedProducts.filter((pid) => pid !== id));
-    } else {
-      setSelectedProducts([...selectedProducts, id]);
-    }
+    setSelectedProducts(prev => 
+      prev.includes(id) ? prev.filter((pid) => pid !== id) : [...prev, id]
+    );
   };
 
   return (
@@ -115,7 +121,10 @@ export default function AdminProducts() {
             />
           </label>
           <button 
-            onClick={() => setIsAddModalOpen(true)}
+            onClick={() => {
+              setEditingProduct(null);
+              setIsModalOpen(true);
+            }}
             className="bg-[#7C6FFF] hover:bg-[#6b5eee] text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors"
           >
             <Plus size={18} />
@@ -124,10 +133,11 @@ export default function AdminProducts() {
         </div>
       </div>
 
-      <AddProductModal 
-        isOpen={isAddModalOpen} 
-        onClose={() => setIsAddModalOpen(false)} 
-        onSuccess={fetchProducts} 
+      <ProductModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={fetchProducts}
+        product={editingProduct}
       />
 
       <div className="admin-card">
@@ -241,17 +251,22 @@ export default function AdminProducts() {
                   <td className="px-6 py-4">{product.category}</td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <button className="p-1.5 text-gray-400 hover:text-white hover:bg-white/10 rounded transition-colors" title="Quick Preview">
+                      <Link href={`/product/${product.slug}`} target="_blank" className="p-1.5 text-gray-400 hover:text-white hover:bg-white/10 rounded transition-colors" title="View in store">
                         <Eye size={16} />
-                      </button>
-                      <button className="p-1.5 text-gray-400 hover:text-white hover:bg-white/10 rounded transition-colors" title="Edit">
+                      </Link>
+                      <button 
+                        onClick={() => handleEdit(product)}
+                        className="p-1.5 text-gray-400 hover:text-[#7C6FFF] hover:bg-[#7C6FFF]/10 rounded transition-colors" 
+                        title="Edit product"
+                      >
                         <Edit size={16} />
                       </button>
-                      <button className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-400/10 rounded transition-colors">
+                      <button 
+                        onClick={() => handleDelete(product.id)}
+                        className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-400/10 rounded transition-colors"
+                        title="Delete product"
+                      >
                         <Trash2 size={16} />
-                      </button>
-                      <button className="p-1.5 text-gray-400 hover:text-white hover:bg-white/10 rounded transition-colors">
-                        <MoreVertical size={16} />
                       </button>
                     </div>
                   </td>

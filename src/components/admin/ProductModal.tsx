@@ -4,13 +4,14 @@ import { useState } from "react";
 import { X, Upload, Save, Package, DollarSign, Tag, Info, Check } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
-interface AddProductModalProps {
+interface ProductModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  product?: any; // Optional product for editing
 }
 
-export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProductModalProps) {
+export default function ProductModal({ isOpen, onClose, onSuccess, product }: ProductModalProps) {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [formData, setFormData] = useState({
@@ -29,6 +30,44 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
     is_featured: false,
     is_new: true,
   });
+
+  useEffect(() => {
+    if (product) {
+      setFormData({
+        name_en: product.name_en || "",
+        name_ar: product.name_ar || "",
+        price_egp: product.price_egp?.toString() || "",
+        compare_price_egp: product.compare_price_egp?.toString() || "",
+        description_en: product.description_en || "",
+        description_ar: product.description_ar || "",
+        category: product.category || "Skincare",
+        brand: product.brand || "",
+        stock: product.stock?.toString() || "0",
+        low_stock_threshold: product.low_stock_threshold?.toString() || "5",
+        main_image: product.main_image || "",
+        is_active: product.is_active ?? true,
+        is_featured: product.is_featured ?? false,
+        is_new: product.is_new ?? true,
+      });
+    } else {
+      setFormData({
+        name_en: "",
+        name_ar: "",
+        price_egp: "",
+        compare_price_egp: "",
+        description_en: "",
+        description_ar: "",
+        category: "Skincare",
+        brand: "",
+        stock: "0",
+        low_stock_threshold: "5",
+        main_image: "",
+        is_active: true,
+        is_featured: false,
+        is_new: true,
+      });
+    }
+  }, [product, isOpen]);
 
   if (!isOpen) return null;
 
@@ -74,15 +113,20 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
       stock: parseInt(formData.stock),
       low_stock_threshold: parseInt(formData.low_stock_threshold),
       slug,
-      images: [formData.main_image],
-      created_at: new Date().toISOString(),
     };
 
-    const { error } = await supabase.from("products").insert([productData]);
+    let result;
+    if (product?.id) {
+      // Update
+      result = await supabase.from("products").update(productData).eq("id", product.id);
+    } else {
+      // Insert
+      result = await supabase.from("products").insert([{ ...productData, created_at: new Date().toISOString() }]);
+    }
 
-    if (error) {
-      console.error("Error adding product:", error);
-      alert(`Error: ${error.message || "Failed to add product"}`);
+    if (result.error) {
+      console.error("Error saving product:", result.error);
+      alert(`Error: ${result.error.message || "Failed to save product"}`);
     } else {
       onSuccess();
       onClose();
@@ -106,8 +150,8 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
               <Package size={24} />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white">Add New Product</h2>
-              <p className="text-sm text-gray-400">Fill in the details to list a new item</p>
+              <h2 className="text-xl font-bold text-white">{product ? "Edit Product" : "Add New Product"}</h2>
+              <p className="text-sm text-gray-400">{product ? "Update the product details" : "Fill in the details to list a new item"}</p>
             </div>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-lg text-gray-400 transition-colors">
@@ -376,7 +420,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
             ) : (
               <>
                 <Save size={18} />
-                Save Product
+                {product ? "Update Product" : "Save Product"}
               </>
             )}
           </button>
