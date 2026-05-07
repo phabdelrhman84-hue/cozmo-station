@@ -119,7 +119,3 @@ export default function AdminCustomers() {
     </div>
   );
 }
-      </div>
-    </div>
-  );
-}
