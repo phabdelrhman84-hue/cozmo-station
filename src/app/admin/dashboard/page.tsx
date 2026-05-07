@@ -53,40 +53,53 @@ export default function Dashboard() {
     newCustomers: 0,
     recentOrders: [],
     lowStockProducts: [],
-    loading: true
+    loading: true,
+    error: null
   });
 
   useEffect(() => {
     async function fetchStats() {
-      // Fetch Orders for KPIs
-      const { data: orders } = await supabase.from('orders').select('*');
-      const { data: customers } = await supabase.from('customers').select('*');
-      const { data: products } = await supabase.from('products').select('*');
+      try {
+        setStats(prev => ({ ...prev, loading: true, error: null }));
+        
+        // Fetch Orders for KPIs
+        const { data: orders, error: ordersErr } = await supabase.from('orders').select('*');
+        const { data: customers, error: custErr } = await supabase.from('customers').select('*');
+        const { data: products, error: prodErr } = await supabase.from('products').select('*');
 
-      const totalSales = orders?.reduce((acc, order) => acc + order.total, 0) || 0;
-      const ordersCount = orders?.length || 0;
-      const avgOrderValue = ordersCount > 0 ? totalSales / ordersCount : 0;
-      const newCustomers = customers?.length || 0;
+        if (ordersErr || custErr || prodErr) {
+          throw new Error("Failed to fetch data from Supabase. Make sure tables exist.");
+        }
 
-      // Recent Orders
-      const { data: recentOrders } = await supabase
-        .from('orders')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(5);
+        const totalSales = orders?.reduce((acc, order) => acc + order.total, 0) || 0;
+        const ordersCount = orders?.length || 0;
+        const avgOrderValue = ordersCount > 0 ? totalSales / ordersCount : 0;
+        const newCustomers = customers?.length || 0;
 
-      // Low Stock
-      const lowStockProducts = products?.filter(p => p.stock <= p.low_stock_threshold) || [];
+        // Recent Orders
+        const { data: recentOrders } = await supabase
+          .from('orders')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(5);
 
-      setStats({
-        totalSales,
-        ordersCount,
-        avgOrderValue,
-        newCustomers,
-        recentOrders: recentOrders || [],
-        lowStockProducts,
-        loading: false
-      });
+        // Low Stock
+        const lowStockProducts = products?.filter(p => p.stock <= p.low_stock_threshold) || [];
+
+        setStats({
+          totalSales,
+          ordersCount,
+          avgOrderValue,
+          newCustomers,
+          recentOrders: recentOrders || [],
+          lowStockProducts,
+          loading: false,
+          error: null
+        });
+      } catch (err: any) {
+        console.error("Dashboard Fetch Error:", err);
+        setStats(prev => ({ ...prev, loading: false, error: err.message }));
+      }
     }
 
     fetchStats();
@@ -134,6 +147,13 @@ export default function Dashboard() {
           <option>Last Month</option>
         </select>
       </div>
+
+      {stats.error && (
+        <div className="bg-red-500/10 border border-red-500/50 p-4 rounded-lg text-red-500 text-sm flex items-center gap-3">
+          <AlertTriangle size={20} />
+          <p><strong>Database Error:</strong> {stats.error}. Please ensure your Supabase tables are set up correctly.</p>
+        </div>
+      )}
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
