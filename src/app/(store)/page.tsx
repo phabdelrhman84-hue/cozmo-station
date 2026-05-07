@@ -22,7 +22,6 @@ import {
 
 export default function HomePage() {
   const { locale, t } = useLanguage();
-  const featuredProducts = demoProducts.filter((p) => p.is_featured);
   const Arrow = locale === "ar" ? ArrowLeft : ArrowRight;
 
   const [themeSections, setThemeSections] = useState<any[]>([]);
