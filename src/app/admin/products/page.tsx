@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Search, Filter, Edit, Trash2, MoreVertical, Eye, CheckSquare } from "lucide-react";
+import { Plus, Search, Filter, Edit, Trash2, MoreVertical, Eye, CheckSquare, Download } from "lucide-react";
 import { demoProducts } from "@/lib/data";
 import { formatPriceEn } from "@/lib/utils";
 
