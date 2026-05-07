@@ -168,17 +168,18 @@ export default function AdminProducts() {
           <table className="w-full text-left text-sm text-gray-400">
             <thead className="bg-[#0F1117]/50 text-gray-300 uppercase font-medium">
               <tr>
-                <th className="px-6 py-4 w-12">
-                  <input
-                    type="checkbox"
-                    className="rounded border-[#2A2E3B] bg-[#1A1D27] text-[#7C6FFF] focus:ring-[#7C6FFF]"
-                    checked={selectedProducts.length === displayProducts.length && displayProducts.length > 0}
+                <th className="px-6 py-4 w-10 text-center">
+                  <input 
+                    type="checkbox" 
                     onChange={toggleSelectAll}
+                    checked={selectedProducts.length === displayProducts.length && displayProducts.length > 0}
+                    className="rounded border-[#2A2E3B] bg-[#0F1117] text-[#7C6FFF] focus:ring-offset-0 focus:ring-[#7C6FFF]" 
                   />
                 </th>
+                <th className="px-6 py-4">ID</th>
                 <th className="px-6 py-4">Product</th>
                 <th className="px-6 py-4">Status</th>
-                <th className="px-6 py-4">Inventory</th>
+                <th className="px-6 py-4 text-center">Inventory</th>
                 <th className="px-6 py-4">Price</th>
                 <th className="px-6 py-4">Category</th>
                 <th className="px-6 py-4 text-right">Actions</th>
@@ -187,13 +188,16 @@ export default function AdminProducts() {
             <tbody className="divide-y divide-[#2A2E3B]">
               {displayProducts.map((product) => (
                 <tr key={product.id} className="hover:bg-white/5 transition-colors">
-                  <td className="px-6 py-4">
-                    <input
-                      type="checkbox"
-                      className="rounded border-[#2A2E3B] bg-[#1A1D27] text-[#7C6FFF] focus:ring-[#7C6FFF]"
+                  <td className="px-6 py-4 text-center">
+                    <input 
+                      type="checkbox" 
                       checked={selectedProducts.includes(product.id.toString())}
                       onChange={() => toggleSelectProduct(product.id.toString())}
+                      className="rounded border-[#2A2E3B] bg-[#0F1117] text-[#7C6FFF] focus:ring-offset-0 focus:ring-[#7C6FFF]" 
                     />
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className="text-gray-500 font-mono text-xs">#{product.id.slice(-6)}</span>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
