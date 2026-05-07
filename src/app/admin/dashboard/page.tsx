@@ -137,7 +137,7 @@ export default function Dashboard() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {kpis.map((kpi, index) => (
+        {kpis.map((kpi, index: number) => (
           <div key={index} className="admin-card p-6">
             <div className="flex items-start justify-between mb-4">
               <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center">
@@ -199,7 +199,7 @@ export default function Dashboard() {
                   paddingAngle={5}
                   dataKey="value"
                 >
-                  {categoryData.map((entry, index) => (
+                  {categoryData.map((entry, index: number) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
@@ -211,7 +211,7 @@ export default function Dashboard() {
             </ResponsiveContainer>
           </div>
           <div className="mt-4 space-y-3">
-            {categoryData.map((category, index) => (
+            {categoryData.map((category, index: number) => (
               <div key={index} className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[index] }} />
@@ -266,7 +266,7 @@ export default function Dashboard() {
             </h3>
           </div>
           <div className="space-y-4">
-            {stats.lowStockProducts.map((item: any, i) => (
+            {stats.lowStockProducts.map((item: any, i: number) => (
               <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-red-500/20">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-[#2A2E3B] flex items-center justify-center text-xl overflow-hidden">
