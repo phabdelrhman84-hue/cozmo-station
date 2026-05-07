@@ -98,7 +98,7 @@ export default function Dashboard() {
         });
       } catch (err: any) {
         console.error("Dashboard Fetch Error:", err);
-        setStats(prev => ({ ...prev, loading: false, error: err.message }));
+        setStats((prev: any) => ({ ...prev, loading: false, error: err.message }));
       }
     }
 
