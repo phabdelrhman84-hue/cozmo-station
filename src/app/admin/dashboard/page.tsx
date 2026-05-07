@@ -46,7 +46,7 @@ import { supabase } from "@/lib/supabase";
 import { useEffect, useState } from "react";
 
 export default function Dashboard() {
-  const [stats, setStats] = useState({
+  const [stats, setStats] = useState<any>({
     totalSales: 0,
     ordersCount: 0,
     avgOrderValue: 0,
