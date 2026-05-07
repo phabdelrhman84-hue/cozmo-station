@@ -1,19 +1,34 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, Download, User } from "lucide-react";
 import { formatPriceEn } from "@/lib/utils";
-
-const mockCustomers = [
-  { id: 1, name: "Ahmed Sayed", email: "ahmed@example.com", orders: 5, spent: 4500, lastOrder: "2024-03-15" },
-  { id: 2, name: "Mona Ali", email: "mona@example.com", orders: 2, spent: 1250, lastOrder: "2024-03-14" },
-  { id: 3, name: "Karim Hassan", email: "karim@example.com", orders: 8, spent: 12400, lastOrder: "2024-03-14" },
-  { id: 4, name: "Sara Mahmoud", email: "sara@example.com", orders: 1, spent: 650, lastOrder: "2024-03-13" },
-  { id: 5, name: "Nour El Din", email: "nour@example.com", orders: 3, spent: 5400, lastOrder: "2024-03-12" },
-];
+import { supabase } from "@/lib/supabase";
 
 export default function AdminCustomers() {
   const [search, setSearch] = useState("");
+  const [customers, setCustomers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchCustomers();
+  }, []);
+
+  const fetchCustomers = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('customers')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (data) setCustomers(data);
+    setLoading(false);
+  };
+
+  const displayCustomers = customers.filter(c => 
+    c.name?.toLowerCase().includes(search.toLowerCase()) || 
+    c.email?.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <div className="space-y-6">
@@ -42,6 +57,12 @@ export default function AdminCustomers() {
 
         {/* Table */}
         <div className="overflow-x-auto">
+          {loading ? (
+             <div className="p-12 flex flex-col items-center justify-center text-gray-400 gap-3">
+             <div className="w-8 h-8 border-2 border-[#7C6FFF] border-t-transparent rounded-full animate-spin"></div>
+             <p>Loading customers...</p>
+           </div>
+          ) : (
           <table className="w-full text-left text-sm text-gray-400">
             <thead className="bg-[#0F1117]/50 text-gray-300 uppercase font-medium">
               <tr>
@@ -54,7 +75,7 @@ export default function AdminCustomers() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#2A2E3B]">
-              {mockCustomers.map((customer) => (
+              {displayCustomers.map((customer) => (
                 <tr key={customer.id} className="hover:bg-white/5 transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
@@ -67,13 +88,15 @@ export default function AdminCustomers() {
                   <td className="px-6 py-4">{customer.email}</td>
                   <td className="px-6 py-4">
                     <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#2A2E3B] text-white text-xs font-bold">
-                      {customer.orders}
+                      {customer.total_orders || 0}
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                    <span className="text-white font-medium">{formatPriceEn(customer.spent)}</span>
+                    <span className="text-white font-medium">{formatPriceEn(customer.total_spent_egp || 0)}</span>
                   </td>
-                  <td className="px-6 py-4">{customer.lastOrder}</td>
+                  <td className="px-6 py-4">
+                    {customer.last_order_date ? new Date(customer.last_order_date).toLocaleDateString() : "No orders"}
+                  </td>
                   <td className="px-6 py-4 text-right">
                     <button className="text-[#7C6FFF] hover:text-[#9B91FF] font-medium text-sm">
                       View Profile
@@ -81,9 +104,21 @@ export default function AdminCustomers() {
                   </td>
                 </tr>
               ))}
+              {displayCustomers.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                    No customers found.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
+          )}
         </div>
+      </div>
+    </div>
+  );
+}
       </div>
     </div>
   );

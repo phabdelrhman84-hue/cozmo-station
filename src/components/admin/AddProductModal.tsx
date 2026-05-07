@@ -12,6 +12,7 @@ interface AddProductModalProps {
 
 export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProductModalProps) {
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [formData, setFormData] = useState({
     name_en: "",
     name_ar: "",
@@ -30,6 +31,32 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
   });
 
   if (!isOpen) return null;
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Math.random()}.${fileExt}`;
+    const filePath = `product-images/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('product-images')
+      .upload(filePath, file);
+
+    if (uploadError) {
+      console.error('Error uploading image:', uploadError);
+      alert('Failed to upload image. Make sure you created a public bucket named "product-images" in Supabase Storage.');
+    } else {
+      const { data } = supabase.storage
+        .from('product-images')
+        .getPublicUrl(filePath);
+      
+      setFormData(prev => ({ ...prev, main_image: data.publicUrl }));
+    }
+    setUploading(false);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -217,23 +244,46 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
                   <Tag size={16} /> Media & Visibility
                 </h3>
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-1.5">Main Image URL</label>
-                  <div className="flex gap-4">
-                    <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-400 mb-1.5">Product Image</label>
+                  <div className="flex items-center gap-4">
+                    <div className="relative w-24 h-24 rounded-xl border-2 border-dashed border-[#2A2E3B] hover:border-[#7C6FFF] transition-colors bg-[#0F1117] flex items-center justify-center overflow-hidden group">
+                      {formData.main_image ? (
+                        <>
+                          <img src={formData.main_image} className="w-full h-full object-cover" />
+                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                            <Upload size={20} className="text-white" />
+                          </div>
+                        </>
+                      ) : (
+                        <div className="flex flex-col items-center gap-1 text-gray-500">
+                          {uploading ? (
+                            <div className="w-6 h-6 border-2 border-[#7C6FFF] border-t-transparent rounded-full animate-spin"></div>
+                          ) : (
+                            <>
+                              <Upload size={24} />
+                              <span className="text-[10px]">Upload</span>
+                            </>
+                          )}
+                        </div>
+                      )}
                       <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        disabled={uploading}
+                        className="absolute inset-0 opacity-0 cursor-pointer disabled:cursor-not-allowed"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-xs text-gray-500 mb-2">Recommended: Square image (1000x1000px). Max 2MB.</p>
+                      <input
+                        type="text"
                         name="main_image"
                         value={formData.main_image}
                         onChange={handleChange}
-                        className="admin-input w-full"
-                        placeholder="https://..."
+                        placeholder="Or paste URL here..."
+                        className="admin-input w-full text-xs"
                       />
-                    </div>
-                    <div className="w-12 h-12 rounded-lg border border-[#2A2E3B] bg-[#0F1117] flex items-center justify-center overflow-hidden flex-shrink-0">
-                      {formData.main_image ? (
-                        <img src={formData.main_image} className="w-full h-full object-cover" />
-                      ) : (
-                        <Upload size={20} className="text-gray-600" />
-                      )}
                     </div>
                   </div>
                 </div>

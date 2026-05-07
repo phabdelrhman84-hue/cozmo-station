@@ -1,19 +1,34 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, Filter, Eye, Download } from "lucide-react";
 import { formatPriceEn } from "@/lib/utils";
-
-const mockOrders = [
-  { id: "CZ-1024", customer: "Ahmed Sayed", date: "2024-03-15", total: 1250, status: "pending", payment: "cod" },
-  { id: "CZ-1023", customer: "Mona Ali", date: "2024-03-14", total: 850, status: "processing", payment: "paypal" },
-  { id: "CZ-1022", customer: "Karim Hassan", date: "2024-03-14", total: 2400, status: "shipped", payment: "cod" },
-  { id: "CZ-1021", customer: "Sara Mahmoud", date: "2024-03-13", total: 650, status: "delivered", payment: "paypal" },
-  { id: "CZ-1020", customer: "Nour El Din", date: "2024-03-12", total: 3200, status: "cancelled", payment: "cod" },
-];
+import { supabase } from "@/lib/supabase";
 
 export default function AdminOrders() {
   const [search, setSearch] = useState("");
+  const [orders, setOrders] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
+  const fetchOrders = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('orders')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (data) setOrders(data);
+    setLoading(false);
+  };
+
+  const displayOrders = orders.filter(o => 
+    o.order_number?.toLowerCase().includes(search.toLowerCase()) || 
+    o.customer_name?.toLowerCase().includes(search.toLowerCase())
+  );
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -67,6 +82,12 @@ export default function AdminOrders() {
 
         {/* Table */}
         <div className="overflow-x-auto">
+          {loading ? (
+             <div className="p-12 flex flex-col items-center justify-center text-gray-400 gap-3">
+             <div className="w-8 h-8 border-2 border-[#7C6FFF] border-t-transparent rounded-full animate-spin"></div>
+             <p>Loading orders...</p>
+           </div>
+          ) : (
           <table className="w-full text-left text-sm text-gray-400">
             <thead className="bg-[#0F1117]/50 text-gray-300 uppercase font-medium">
               <tr>
@@ -74,38 +95,25 @@ export default function AdminOrders() {
                 <th className="px-6 py-4">Date</th>
                 <th className="px-6 py-4">Customer</th>
                 <th className="px-6 py-4">Total</th>
-                <th className="px-6 py-4">Payment</th>
                 <th className="px-6 py-4">Status</th>
                 <th className="px-6 py-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#2A2E3B]">
-              {mockOrders.map((order) => (
+              {displayOrders.map((order) => (
                 <tr key={order.id} className="hover:bg-white/5 transition-colors">
                   <td className="px-6 py-4">
-                    <span className="text-white font-medium">{order.id}</span>
+                    <span className="text-white font-medium">#{order.order_number || order.id}</span>
                   </td>
-                  <td className="px-6 py-4">{order.date}</td>
-                  <td className="px-6 py-4">{order.customer}</td>
+                  <td className="px-6 py-4">{new Date(order.created_at).toLocaleDateString()}</td>
+                  <td className="px-6 py-4">{order.customer_name}</td>
                   <td className="px-6 py-4">
                     <span className="text-white">{formatPriceEn(order.total)}</span>
                   </td>
-                  <td className="px-6 py-4 uppercase text-xs font-bold">{order.payment}</td>
                   <td className="px-6 py-4">
-                    <select
-                      className={`px-2.5 py-1 rounded-full text-xs font-medium border appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#7C6FFF] ${getStatusColor(order.status)} capitalize`}
-                      defaultValue={order.status}
-                      onChange={(e) => {
-                        // Here you would typically trigger an API call to update the status
-                        console.log(`Update order ${order.id} status to ${e.target.value}`);
-                      }}
-                    >
-                      <option value="pending" className="bg-[#1A1D27] text-white">Pending</option>
-                      <option value="processing" className="bg-[#1A1D27] text-white">Processing</option>
-                      <option value="shipped" className="bg-[#1A1D27] text-white">Shipped</option>
-                      <option value="delivered" className="bg-[#1A1D27] text-white">Delivered</option>
-                      <option value="cancelled" className="bg-[#1A1D27] text-white">Cancelled</option>
-                    </select>
+                    <span className={`px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusColor(order.order_status)} capitalize`}>
+                      {order.order_status}
+                    </span>
                   </td>
                   <td className="px-6 py-4 text-right">
                     <button className="p-1.5 text-gray-400 hover:text-white hover:bg-white/10 rounded transition-colors inline-flex">
@@ -114,8 +122,16 @@ export default function AdminOrders() {
                   </td>
                 </tr>
               ))}
+              {displayOrders.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                    No orders found.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
+          )}
         </div>
       </div>
     </div>
