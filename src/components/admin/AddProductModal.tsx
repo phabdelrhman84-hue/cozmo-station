@@ -82,7 +82,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
 
     if (error) {
       console.error("Error adding product:", error);
-      alert("Failed to add product. Please check the console for details.");
+      alert(`Error: ${error.message || "Failed to add product"}`);
     } else {
       onSuccess();
       onClose();
