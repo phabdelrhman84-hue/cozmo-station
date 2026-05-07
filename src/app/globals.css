@@ -208,3 +208,23 @@ body {
 .admin-card:hover {
   border-color: var(--color-admin-accent);
 }
+
+.admin-input {
+  background: var(--color-admin-bg);
+  border: 1px solid var(--color-admin-border);
+  border-radius: var(--radius-md);
+  color: white;
+  padding: 10px 16px;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.admin-input:focus {
+  border-color: var(--color-admin-accent);
+  box-shadow: 0 0 0 3px rgba(124, 111, 255, 0.1);
+}
+
+.admin-input::placeholder {
+  color: #52525B;
+}

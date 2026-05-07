@@ -8,11 +8,14 @@ import { formatPriceEn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
 import { useEffect } from "react";
 
+import AddProductModal from "@/components/admin/AddProductModal";
+
 export default function AdminProducts() {
   const [search, setSearch] = useState("");
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   useEffect(() => {
     fetchProducts();
@@ -55,11 +58,20 @@ export default function AdminProducts() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-2xl font-bold text-white">Products</h1>
-        <button className="bg-[#7C6FFF] hover:bg-[#6b5eee] text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors">
+        <button 
+          onClick={() => setIsAddModalOpen(true)}
+          className="bg-[#7C6FFF] hover:bg-[#6b5eee] text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors"
+        >
           <Plus size={18} />
           Add Product
         </button>
       </div>
+
+      <AddProductModal 
+        isOpen={isAddModalOpen} 
+        onClose={() => setIsAddModalOpen(false)} 
+        onSuccess={fetchProducts} 
+      />
 
       <div className="admin-card">
         {/* Toolbar */}
