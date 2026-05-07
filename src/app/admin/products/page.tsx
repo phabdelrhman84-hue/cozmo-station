@@ -209,7 +209,7 @@ export default function AdminProducts() {
                     />
                   </td>
                   <td className="px-6 py-4">
-                    <span className="text-gray-500 font-mono text-xs">#{product.id.slice(-6)}</span>
+                    <span className="text-gray-500 font-mono text-xs">#{product.id}</span>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
