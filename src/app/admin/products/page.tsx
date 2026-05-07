@@ -14,6 +14,7 @@ export default function AdminProducts() {
   const [search, setSearch] = useState("");
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [importing, setImporting] = useState(false);
 
