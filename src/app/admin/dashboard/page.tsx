@@ -42,33 +42,82 @@ const categoryData = [
 
 const COLORS = ["#7C6FFF", "#E8A0BF", "#7D8F69"];
 
+import { supabase } from "@/lib/supabase";
+import { useEffect, useState } from "react";
+
 export default function Dashboard() {
+  const [stats, setStats] = useState({
+    totalSales: 0,
+    ordersCount: 0,
+    avgOrderValue: 0,
+    newCustomers: 0,
+    recentOrders: [],
+    lowStockProducts: [],
+    loading: true
+  });
+
+  useEffect(() => {
+    async function fetchStats() {
+      // Fetch Orders for KPIs
+      const { data: orders } = await supabase.from('orders').select('*');
+      const { data: customers } = await supabase.from('customers').select('*');
+      const { data: products } = await supabase.from('products').select('*');
+
+      const totalSales = orders?.reduce((acc, order) => acc + order.total, 0) || 0;
+      const ordersCount = orders?.length || 0;
+      const avgOrderValue = ordersCount > 0 ? totalSales / ordersCount : 0;
+      const newCustomers = customers?.length || 0;
+
+      // Recent Orders
+      const { data: recentOrders } = await supabase
+        .from('orders')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      // Low Stock
+      const lowStockProducts = products?.filter(p => p.stock <= p.low_stock_threshold) || [];
+
+      setStats({
+        totalSales,
+        ordersCount,
+        avgOrderValue,
+        newCustomers,
+        recentOrders: recentOrders || [],
+        lowStockProducts,
+        loading: false
+      });
+    }
+
+    fetchStats();
+  }, []);
+
   const kpis = [
     {
       title: "Total Sales",
-      value: formatPriceEn(124500),
-      trend: "+12.5%",
+      value: formatPriceEn(stats.totalSales),
+      trend: "+0%",
       positive: true,
       icon: <DollarSign size={20} className="text-[#7C6FFF]" />,
     },
     {
       title: "Orders",
-      value: "458",
-      trend: "+5.2%",
+      value: stats.ordersCount.toString(),
+      trend: "+0%",
       positive: true,
       icon: <ShoppingBag size={20} className="text-[#E8A0BF]" />,
     },
     {
       title: "Average Order Value",
-      value: formatPriceEn(850),
-      trend: "-2.1%",
-      positive: false,
+      value: formatPriceEn(stats.avgOrderValue),
+      trend: "+0%",
+      positive: true,
       icon: <TrendingUp size={20} className="text-[#7D8F69]" />,
     },
     {
       title: "New Customers",
-      value: "124",
-      trend: "+18.4%",
+      value: stats.newCustomers.toString(),
+      trend: "+0%",
       positive: true,
       icon: <Users size={20} className="text-[#F5A623]" />,
     },
@@ -183,25 +232,28 @@ export default function Dashboard() {
             <button className="text-sm text-[#7C6FFF] hover:text-[#9B91FF]">View All</button>
           </div>
           <div className="space-y-4">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-white/5">
+            {stats.recentOrders.map((order: any) => (
+              <div key={order.id} className="flex items-center justify-between p-3 rounded-lg bg-white/5">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-[#2A2E3B] flex items-center justify-center text-sm font-medium">
-                    #10{i}
+                    #{order.order_number?.slice(-4) || order.id}
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-white">Ahmed Mohamed</p>
-                    <p className="text-xs text-gray-400">2 hours ago</p>
+                    <p className="text-sm font-medium text-white">{order.customer_name}</p>
+                    <p className="text-xs text-gray-400">{new Date(order.created_at).toLocaleDateString()}</p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-bold text-white">EGP 1,450</p>
-                  <span className="inline-flex px-2 py-1 rounded text-xs font-medium bg-emerald-400/10 text-emerald-400 mt-1">
-                    Processing
+                  <p className="text-sm font-bold text-white">{formatPriceEn(order.total)}</p>
+                  <span className={`inline-flex px-2 py-1 rounded text-xs font-medium mt-1 ${
+                    order.order_status === 'delivered' ? 'bg-emerald-400/10 text-emerald-400' : 'bg-yellow-400/10 text-yellow-400'
+                  }`}>
+                    {order.order_status}
                   </span>
                 </div>
               </div>
             ))}
+            {stats.recentOrders.length === 0 && <p className="text-center text-gray-500 py-4">No recent orders</p>}
           </div>
         </div>
 
@@ -214,18 +266,14 @@ export default function Dashboard() {
             </h3>
           </div>
           <div className="space-y-4">
-            {[
-              { name: "COSRX Snail Mucin", stock: 5 },
-              { name: "Beauty of Joseon Sunscreen", stock: 2 },
-              { name: "Anua Heartleaf Toner", stock: 8 },
-            ].map((item, i) => (
+            {stats.lowStockProducts.map((item: any, i) => (
               <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-red-500/20">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-[#2A2E3B] flex items-center justify-center text-xl">
-                    🧴
+                  <div className="w-10 h-10 rounded-lg bg-[#2A2E3B] flex items-center justify-center text-xl overflow-hidden">
+                    {item.main_image ? <img src={item.main_image} className="w-full h-full object-cover" /> : "🧴"}
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-white">{item.name}</p>
+                    <p className="text-sm font-medium text-white line-clamp-1">{item.name_en}</p>
                     <p className="text-xs text-red-400">Only {item.stock} left in stock</p>
                   </div>
                 </div>
@@ -234,6 +282,7 @@ export default function Dashboard() {
                 </button>
               </div>
             ))}
+            {stats.lowStockProducts.length === 0 && <p className="text-center text-gray-500 py-4">No low stock alerts</p>}
           </div>
         </div>
       </div>

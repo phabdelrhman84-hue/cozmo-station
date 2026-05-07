@@ -5,15 +5,41 @@ import { Plus, Search, Filter, Edit, Trash2, MoreVertical, Eye, CheckSquare } fr
 import { demoProducts } from "@/lib/data";
 import { formatPriceEn } from "@/lib/utils";
 
+import { supabase } from "@/lib/supabase";
+import { useEffect } from "react";
+
 export default function AdminProducts() {
   const [search, setSearch] = useState("");
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (data) setProducts(data);
+    setLoading(false);
+  };
+
+  const displayProducts = products.filter(p => 
+    p.name_en.toLowerCase().includes(search.toLowerCase()) || 
+    p.name_ar.includes(search) ||
+    p.brand.toLowerCase().includes(search.toLowerCase())
+  );
 
   const toggleSelectAll = () => {
-    if (selectedProducts.length === demoProducts.length) {
+    if (selectedProducts.length === displayProducts.length) {
       setSelectedProducts([]);
     } else {
-      setSelectedProducts(demoProducts.map((p) => p.id.toString()));
+      setSelectedProducts(displayProducts.map((p) => p.id.toString()));
     }
   };
 
@@ -64,6 +90,12 @@ export default function AdminProducts() {
 
         {/* Table */}
         <div className="overflow-x-auto">
+          {loading ? (
+            <div className="p-12 flex flex-col items-center justify-center text-gray-400 gap-3">
+              <div className="w-8 h-8 border-2 border-[#7C6FFF] border-t-transparent rounded-full animate-spin"></div>
+              <p>Loading products...</p>
+            </div>
+          ) : (
           <table className="w-full text-left text-sm text-gray-400">
             <thead className="bg-[#0F1117]/50 text-gray-300 uppercase font-medium">
               <tr>
@@ -71,7 +103,7 @@ export default function AdminProducts() {
                   <input
                     type="checkbox"
                     className="rounded border-[#2A2E3B] bg-[#1A1D27] text-[#7C6FFF] focus:ring-[#7C6FFF]"
-                    checked={selectedProducts.length === demoProducts.length && demoProducts.length > 0}
+                    checked={selectedProducts.length === displayProducts.length && displayProducts.length > 0}
                     onChange={toggleSelectAll}
                   />
                 </th>
@@ -84,7 +116,7 @@ export default function AdminProducts() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#2A2E3B]">
-              {demoProducts.map((product) => (
+              {displayProducts.map((product) => (
                 <tr key={product.id} className="hover:bg-white/5 transition-colors">
                   <td className="px-6 py-4">
                     <input
@@ -97,7 +129,11 @@ export default function AdminProducts() {
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded bg-[#2A2E3B] flex items-center justify-center flex-shrink-0">
-                        {product.category === "Haircare" ? "💇‍♀️" : "🧴"}
+                        {product.main_image ? (
+                          <img src={product.main_image} alt="" className="w-full h-full object-cover rounded" />
+                        ) : (
+                          <span>{product.category === "Haircare" ? "💇‍♀️" : "🧴"}</span>
+                        )}
                       </div>
                       <div>
                         <p className="text-white font-medium line-clamp-1">{product.name_en}</p>
@@ -106,22 +142,25 @@ export default function AdminProducts() {
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    {product.stock > product.low_stock_threshold ? (
+                    {product.is_active ? (
                       <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-emerald-400/10 text-emerald-400">
                         Active
                       </span>
-                    ) : product.stock > 0 ? (
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-400/10 text-yellow-400">
-                        Low Stock
-                      </span>
                     ) : (
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-400/10 text-red-400">
-                        Out of Stock
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-400/10 text-gray-400">
+                        Inactive
                       </span>
                     )}
                   </td>
                   <td className="px-6 py-4">
-                    {product.stock} in stock
+                    <div className="flex flex-col">
+                      <span className={product.stock <= product.low_stock_threshold ? "text-yellow-400" : ""}>
+                        {product.stock} in stock
+                      </span>
+                      {product.stock <= product.low_stock_threshold && (
+                        <span className="text-[10px] text-yellow-400 uppercase font-bold">Low</span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-6 py-4">
                     <span className="text-white">{formatPriceEn(product.price_egp)}</span>
@@ -145,13 +184,21 @@ export default function AdminProducts() {
                   </td>
                 </tr>
               ))}
+              {displayProducts.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                    No products found matching your search.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
+          )}
         </div>
 
         {/* Pagination */}
         <div className="p-4 border-t border-[#2A2E3B] flex items-center justify-between text-sm text-gray-400">
-          <span>Showing 1 to {demoProducts.length} of {demoProducts.length} results</span>
+          <span>Showing 1 to {displayProducts.length} of {displayProducts.length} results</span>
           <div className="flex gap-1">
             <button className="px-3 py-1 rounded bg-[#0F1117] border border-[#2A2E3B] hover:bg-white/5 disabled:opacity-50" disabled>Prev</button>
             <button className="px-3 py-1 rounded bg-[#7C6FFF] text-white">1</button>

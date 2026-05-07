@@ -1,4 +1,30 @@
-import type { Product, ShippingZone } from "@/types";
+import type { Product, ShippingZone, Order } from "@/types";
+import { supabase } from "./supabase";
+
+export async function getProducts() {
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error || !data || data.length === 0) {
+    console.log('Using demo products (Supabase error or empty table)');
+    return demoProducts;
+  }
+  return data;
+}
+
+export async function getOrders() {
+  const { data, error } = await supabase
+    .from('orders')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error || !data) {
+    return [];
+  }
+  return data;
+}
 
 export const demoProducts: Product[] = [
   {

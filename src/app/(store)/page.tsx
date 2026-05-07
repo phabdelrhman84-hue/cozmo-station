@@ -26,17 +26,32 @@ export default function HomePage() {
   const Arrow = locale === "ar" ? ArrowLeft : ArrowRight;
 
   const [themeSections, setThemeSections] = useState<any[]>([]);
+  const [products, setProducts] = useState<any[]>(demoProducts);
 
   useEffect(() => {
-    async function fetchTheme() {
-      const { data } = await supabase.from('site_content').select('*').order('order_index', { ascending: true });
-      if (data) {
-        setThemeSections(data);
+    async function fetchData() {
+      // Fetch Site Content
+      const { data: contentData } = await supabase.from('site_content').select('*').order('order_index', { ascending: true });
+      if (contentData) {
+        setThemeSections(contentData);
+      }
+
+      // Fetch Products
+      const { data: prodData, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('is_active', true);
+      
+      if (prodData && prodData.length > 0) {
+        setProducts(prodData);
       }
     }
-    fetchTheme();
+    fetchData();
   }, []);
 
+  const featuredProducts = products.filter((p) => p.is_featured);
+  const newArrivals = products.filter((p) => p.is_new);
+  
   const getSection = (type: string) => themeSections.find(s => s.type === type);
   const heroSection = getSection('hero');
   const featuredSection = getSection('featured_products');
@@ -273,8 +288,7 @@ export default function HomePage() {
             </div>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-            {demoProducts
-              .filter((p) => p.is_new)
+            {newArrivals
               .map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
