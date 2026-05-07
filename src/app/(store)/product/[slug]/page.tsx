@@ -98,6 +98,13 @@ export default function ProductDetailPage() {
     : 0;
   const isOutOfStock = product.stock <= 0;
 
+  const handleAddToCart = () => {
+    if (isOutOfStock) return;
+    addItem(product, quantity);
+    setAdded(true);
+    setTimeout(() => setAdded(false), 2000);
+  };
+
   const Back = locale === "ar" ? ChevronRight : ChevronLeft;
 
   return (
