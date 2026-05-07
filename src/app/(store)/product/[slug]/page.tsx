@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useCart } from "@/hooks/useCart";
 import ProductCard from "@/components/store/ProductCard";
-import { demoProducts } from "@/lib/data";
 import { getDiscountPercentage } from "@/lib/utils";
+import { supabase } from "@/lib/supabase";
 import {
   ShoppingBag,
   Check,
@@ -26,12 +26,51 @@ export default function ProductDetailPage() {
   const { locale, t } = useLanguage();
   const { addItem } = useCart();
 
-  const product = demoProducts.find((p) => p.slug === slug);
+  const [product, setProduct] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState<"description" | "ingredients">(
     "description"
   );
   const [added, setAdded] = useState(false);
+  const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchProduct = async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('slug', slug)
+        .single();
+      
+      if (data) {
+        setProduct(data);
+        // Fetch related
+        const { data: related } = await supabase
+          .from('products')
+          .select('*')
+          .eq('category', data.category)
+          .neq('id', data.id)
+          .limit(4);
+        if (related) setRelatedProducts(related);
+      }
+      setLoading(false);
+    };
+
+    fetchProduct();
+  }, [slug]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-beige-light">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-pink border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-warm-gray font-medium">Loading product...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -58,17 +97,6 @@ export default function ProductDetailPage() {
     ? getDiscountPercentage(product.price_egp, product.compare_price_egp)
     : 0;
   const isOutOfStock = product.stock <= 0;
-
-  const relatedProducts = demoProducts
-    .filter((p) => p.category === product.category && p.id !== product.id)
-    .slice(0, 4);
-
-  const handleAddToCart = () => {
-    if (isOutOfStock) return;
-    addItem(product, quantity);
-    setAdded(true);
-    setTimeout(() => setAdded(false), 2000);
-  };
 
   const Back = locale === "ar" ? ChevronRight : ChevronLeft;
 
@@ -100,10 +128,18 @@ export default function ProductDetailPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Image Gallery */}
           <div className="space-y-4">
-            <div className="aspect-square rounded-2xl bg-gradient-to-br from-beige to-beige-dark overflow-hidden relative group">
-              <div className="w-full h-full flex items-center justify-center text-[120px]">
-                {product.category === "Haircare" ? "💇‍♀️" : "🧴"}
-              </div>
+            <div className="aspect-square rounded-2xl bg-white overflow-hidden relative group border border-beige-dark">
+              {product.main_image ? (
+                <img 
+                  src={product.main_image} 
+                  alt={name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-[120px] bg-gradient-to-br from-beige to-beige-dark">
+                  {product.category === "Haircare" ? "💇‍♀️" : "🧴"}
+                </div>
+              )}
               {/* Badges */}
               {discount > 0 && (
                 <span className="absolute top-4 start-4 px-3 py-1.5 bg-error text-white text-sm font-bold rounded-full">

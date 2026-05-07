@@ -42,10 +42,19 @@ export default function ProductCard({ product }: ProductCardProps) {
     >
       <div className="card overflow-hidden">
         {/* Image Container */}
-        <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-beige to-beige-dark">
-          {/* Placeholder gradient - replace with real images */}
-          <div className="w-full h-full flex items-center justify-center text-6xl transition-transform duration-500 group-hover:scale-110">
-            {product.category === "Haircare" ? "💇‍♀️" : "🧴"}
+        <div className="relative aspect-square overflow-hidden bg-white">
+          <div className="w-full h-full transition-transform duration-500 group-hover:scale-110">
+            {product.main_image ? (
+              <img 
+                src={product.main_image} 
+                alt={name}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-6xl bg-gradient-to-br from-beige to-beige-dark">
+                 {product.category === "Haircare" ? "💇‍♀️" : "🧴"}
+              </div>
+            )}
           </div>
 
           {/* Badges */}
