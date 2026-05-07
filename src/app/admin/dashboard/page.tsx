@@ -60,7 +60,7 @@ export default function Dashboard() {
   useEffect(() => {
     async function fetchStats() {
       try {
-        setStats(prev => ({ ...prev, loading: true, error: null }));
+        setStats((prev: any) => ({ ...prev, loading: true, error: null }));
         
         // Fetch Orders for KPIs
         const { data: orders, error: ordersErr } = await supabase.from('orders').select('*');
