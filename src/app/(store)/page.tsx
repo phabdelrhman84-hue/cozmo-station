@@ -7,11 +7,11 @@ import RoutineBuilder from "@/components/store/RoutineBuilder";
 import ReviewsSection from "@/components/store/ReviewsSection";
 import FreeShippingBar from "@/components/store/FreeShippingBar";
 import CategoriesSection from "@/components/store/CategoriesSection";
+import HeroBanner from "@/components/store/HeroBanner";
 import { demoProducts } from "@/lib/data";
 import { supabase } from "@/lib/supabase";
 import { useState, useEffect } from "react";
 import {
-  Sparkles,
   Truck,
   Shield,
   Star,
@@ -23,6 +23,7 @@ import {
 export default function HomePage() {
   const { locale, t } = useLanguage();
   const Arrow = locale === "ar" ? ArrowLeft : ArrowRight;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
 
   const [themeSections, setThemeSections] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>(demoProducts);
@@ -92,103 +93,11 @@ export default function HomePage() {
 
   return (
     <div>
-      {/* ===== HERO SECTION ===== */}
+      {/* ===== HERO BANNER ===== */}
       {(!heroSection || heroSection.is_visible) && (
-      <section className="relative overflow-hidden bg-gradient-to-br from-beige via-beige-light to-pink-light/20 min-h-[70vh] flex items-center">
-        {/* Decorative Elements */}
-        <div className="absolute top-20 start-10 w-72 h-72 bg-pink/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-10 end-10 w-96 h-96 bg-sage/10 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 start-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] border border-pink/5 rounded-full" />
-        <div className="absolute top-1/2 start-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] border border-sage/5 rounded-full" />
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div className="animate-fade-in">
-              <span className="inline-flex items-center gap-2 px-4 py-2 bg-pink/10 rounded-full text-pink-dark text-sm font-semibold mb-6">
-                <Sparkles size={16} />
-                {locale === "ar"
-                  ? "العناية الكورية الأصلية"
-                  : "Authentic K-Beauty"}
-              </span>
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-charcoal leading-tight mb-6">
-                {heroSection ? (locale === 'ar' ? heroSection.content.title_ar : heroSection.content.title_en) : t("hero.title")}
-              </h1>
-              <p className="text-lg text-warm-gray leading-relaxed mb-8 max-w-xl">
-                {heroSection ? (locale === 'ar' ? heroSection.content.subtitle_ar : heroSection.content.subtitle_en) : t("hero.subtitle")}
-              </p>
-              <div className="flex flex-wrap gap-4">
-                <Link href="/products" className="btn-primary text-lg px-8 py-4">
-                  {heroSection ? (locale === 'ar' ? heroSection.content.button_text_ar : heroSection.content.button_text_en) : t("hero.cta")}
-                  <Arrow
-                    size={18}
-                    className="inline ms-2"
-                  />
-                </Link>
-                <Link
-                  href="/about"
-                  className="btn-secondary text-lg px-8 py-4"
-                >
-                  {t("hero.secondary_cta")}
-                </Link>
-              </div>
-
-              {/* Stats */}
-              <div className="flex gap-8 mt-10">
-                {[
-                  {
-                    num: "500+",
-                    label_ar: "عميل سعيد",
-                    label_en: "Happy Customers",
-                  },
-                  {
-                    num: "50+",
-                    label_ar: "منتج أصلي",
-                    label_en: "Authentic Products",
-                  },
-                  {
-                    num: "27",
-                    label_ar: "محافظة",
-                    label_en: "Governorates",
-                  },
-                ].map((stat, i) => (
-                  <div key={i} className="text-center">
-                    <p className="text-2xl font-extrabold text-gradient">
-                      {stat.num}
-                    </p>
-                    <p className="text-sm text-warm-gray">
-                      {locale === "ar" ? stat.label_ar : stat.label_en}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Hero Visual */}
-            <div className="hidden lg:flex items-center justify-center animate-slide-up">
-              <div className="relative">
-                <div className="w-80 h-80 rounded-full bg-gradient-to-br from-pink/20 to-sage/20 flex items-center justify-center">
-                  <div className="w-64 h-64 rounded-full bg-gradient-to-br from-pink-light/40 to-sage-light/30 flex items-center justify-center text-8xl">
-                    ✨
-                  </div>
-                </div>
-                {/* Floating product cards */}
-                <div className="absolute -top-4 -end-8 bg-white rounded-2xl shadow-lg p-3 animate-pulse-soft">
-                  <div className="text-3xl">🧴</div>
-                  <p className="text-xs font-bold text-charcoal mt-1">COSRX</p>
-                </div>
-                <div className="absolute -bottom-4 -start-8 bg-white rounded-2xl shadow-lg p-3 animate-pulse-soft" style={{ animationDelay: "1s" }}>
-                  <div className="text-3xl">☀️</div>
-                  <p className="text-xs font-bold text-charcoal mt-1">SPF50+</p>
-                </div>
-                <div className="absolute top-1/2 -end-16 bg-white rounded-2xl shadow-lg p-3 animate-pulse-soft" style={{ animationDelay: "0.5s" }}>
-                  <div className="text-3xl">💧</div>
-                  <p className="text-xs font-bold text-charcoal mt-1">Serum</p>
-                </div>
-              </div>
-            </div>
-          </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+          <HeroBanner />
         </div>
-      </section>
       )}
 
       {/* ===== FREE SHIPPING BAR ===== */}
