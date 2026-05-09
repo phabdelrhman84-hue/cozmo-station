@@ -187,6 +187,13 @@ export default function CartDrawer() {
             >
               {t("cart.checkout")}
             </Link>
+            <Link
+              href="/cart"
+              onClick={closeCart}
+              className="btn-secondary block w-full text-center text-sm"
+            >
+              {locale === "ar" ? "عرض السلة" : "View Cart"}
+            </Link>
           </div>
         )}
       </div>
