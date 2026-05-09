@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useMemo, Suspense } from "react";
+import { useState, useEffect, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLanguage } from "@/hooks/useLanguage";
 import ProductCard from "@/components/store/ProductCard";
 import { demoProducts } from "@/lib/data";
+import { supabase } from "@/lib/supabase";
+import { getShopifyProducts } from "@/lib/shopify";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 
 function ProductsPageContent() {
@@ -13,11 +15,40 @@ function ProductsPageContent() {
   const initialCategory = searchParams.get("category") || "all";
   const initialSearch = searchParams.get("search") || "";
 
+  const [allProducts, setAllProducts] = useState(demoProducts);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState(initialSearch);
   const [category, setCategory] = useState(initialCategory);
   const [sortBy, setSortBy] = useState("newest");
   const [showFilters, setShowFilters] = useState(false);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
+
+  // ── Fetch: Shopify ← Supabase ← demoProducts ───────────────────────────
+  useEffect(() => {
+    async function load() {
+      setIsLoading(true);
+      try {
+        const shopify = await getShopifyProducts(50);
+        if (shopify.length > 0) {
+          setAllProducts(shopify);
+          const maxPrice = Math.max(...shopify.map((p) => p.price_egp));
+          setPriceRange([0, maxPrice]);
+          setIsLoading(false);
+          return;
+        }
+      } catch { /* Shopify غير مُفعَّل */ }
+
+      const { data } = await supabase.from("products").select("*").eq("is_active", true);
+      if (data && data.length > 0) {
+        setAllProducts(data);
+        const maxPrice = Math.max(...data.map((p: any) => p.price_egp));
+        setPriceRange([0, maxPrice]);
+      }
+      // else: تبقى demoProducts (الحالة الافتراضية)
+      setIsLoading(false);
+    }
+    load();
+  }, []);
 
   const categories = [
     { id: "all", label: t("products.all") },
@@ -26,57 +57,28 @@ function ProductsPageContent() {
   ];
 
   const filteredProducts = useMemo(() => {
-    let products = [...demoProducts];
+    let products = [...allProducts];
 
-    // Category filter
     if (category !== "all") {
-      products = products.filter(
-        (p) => p.category.toLowerCase() === category.toLowerCase()
-      );
+      products = products.filter((p) => p.category.toLowerCase() === category.toLowerCase());
     }
-
-    // Search filter
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       products = products.filter(
-        (p) =>
-          p.name_en.toLowerCase().includes(q) ||
-          p.name_ar.includes(q) ||
-          p.brand.toLowerCase().includes(q)
+        (p) => p.name_en.toLowerCase().includes(q) || p.name_ar.includes(q) || p.brand.toLowerCase().includes(q)
       );
     }
-
-    // Price filter
-    products = products.filter(
-      (p) => p.price_egp >= priceRange[0] && p.price_egp <= priceRange[1]
-    );
-
-    // Sort
+    products = products.filter((p) => p.price_egp >= priceRange[0] && p.price_egp <= priceRange[1]);
     switch (sortBy) {
-      case "price_asc":
-        products.sort((a, b) => a.price_egp - b.price_egp);
-        break;
-      case "price_desc":
-        products.sort((a, b) => b.price_egp - a.price_egp);
-        break;
+      case "price_asc": products.sort((a, b) => a.price_egp - b.price_egp); break;
+      case "price_desc": products.sort((a, b) => b.price_egp - a.price_egp); break;
       case "name":
-        products.sort((a, b) =>
-          locale === "ar"
-            ? a.name_ar.localeCompare(b.name_ar)
-            : a.name_en.localeCompare(b.name_en)
-        );
+        products.sort((a, b) => locale === "ar" ? a.name_ar.localeCompare(b.name_ar) : a.name_en.localeCompare(b.name_en));
         break;
-      case "newest":
-      default:
-        products.sort(
-          (a, b) =>
-            new Date(b.created_at).getTime() -
-            new Date(a.created_at).getTime()
-        );
+      default: products.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     }
-
     return products;
-  }, [category, searchQuery, sortBy, priceRange, locale]);
+  }, [allProducts, category, searchQuery, sortBy, priceRange, locale]);
 
   return (
     <div className="min-h-screen bg-beige-light">
@@ -204,7 +206,13 @@ function ProductsPageContent() {
         </p>
 
         {/* Products Grid */}
-        {filteredProducts.length > 0 ? (
+        {isLoading ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="rounded-2xl bg-beige-dark/40 animate-pulse aspect-[4/5]" />
+            ))}
+          </div>
+        ) : filteredProducts.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
             {filteredProducts.map((product) => (
               <ProductCard key={product.id} product={product} />
