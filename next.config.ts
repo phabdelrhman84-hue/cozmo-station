@@ -8,7 +8,11 @@ const nextConfig: NextConfig = {
       },
       {
         hostname: '*.supabase.co',
-      }
+      },
+      {
+        // Shopify product images CDN
+        hostname: 'cdn.shopify.com',
+      },
     ],
   },
   async headers() {
