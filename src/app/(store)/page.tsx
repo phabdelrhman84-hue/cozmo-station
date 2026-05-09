@@ -10,6 +10,7 @@ import CategoriesSection from "@/components/store/CategoriesSection";
 import HeroBanner from "@/components/store/HeroBanner";
 import { demoProducts } from "@/lib/data";
 import { supabase } from "@/lib/supabase";
+import { getShopifyProducts } from "@/lib/shopify";
 import { useState, useEffect } from "react";
 import {
   Truck,
@@ -23,28 +24,44 @@ import {
 export default function HomePage() {
   const { locale, t } = useLanguage();
   const Arrow = locale === "ar" ? ArrowLeft : ArrowRight;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
 
   const [themeSections, setThemeSections] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>(demoProducts);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
-      // Fetch Site Content
-      const { data: contentData } = await supabase.from('site_content').select('*').order('order_index', { ascending: true });
-      if (contentData) {
-        setThemeSections(contentData);
+      setIsLoading(true);
+
+      // ── Site Content من Supabase (دائماً) ──────────────────────────
+      const { data: contentData } = await supabase
+        .from("site_content")
+        .select("*")
+        .order("order_index", { ascending: true });
+      if (contentData) setThemeSections(contentData);
+
+      // ── Products: Shopify أولاً ← Supabase ← demoProducts ──────────
+      try {
+        const shopifyProducts = await getShopifyProducts(12);
+        if (shopifyProducts.length > 0) {
+          setProducts(shopifyProducts);
+          setIsLoading(false);
+          return; // تم الجلب من Shopify — لا حاجة لـ Supabase
+        }
+      } catch {
+        // Shopify غير مُفعَّل أو ENV vars غير مُضبوطة — نتجاهل ونكمل
       }
 
-      // Fetch Products
-      const { data: prodData, error } = await supabase
-        .from('products')
-        .select('*')
-        .eq('is_active', true);
-      
-      if (prodData && prodData.length > 0) {
-        setProducts(prodData);
-      }
+      // Fallback: Supabase
+      const { data: prodData } = await supabase
+        .from("products")
+        .select("*")
+        .eq("is_active", true);
+
+      if (prodData && prodData.length > 0) setProducts(prodData);
+      // else: تبقى demoProducts (القيمة الافتراضية)
+
+      setIsLoading(false);
     }
     fetchData();
   }, []);
@@ -155,23 +172,22 @@ export default function HomePage() {
                 {featuredSection ? (locale === 'ar' ? featuredSection.content.title_ar : featuredSection.content.title_en) : (locale === "ar" ? "منتجات مميزة" : "Featured Products")}
               </h2>
               <p className="text-warm-gray mt-1">
-                {locale === "ar"
-                  ? "أفضل المنتجات المختارة بعناية"
-                  : "Our carefully curated best sellers"}
+                {locale === "ar" ? "أفضل المنتجات المختارة بعناية" : "Our carefully curated best sellers"}
               </p>
             </div>
-            <Link
-              href="/products"
-              className="btn-secondary flex items-center gap-2 text-sm"
-            >
+            <Link href="/products" className="btn-secondary flex items-center gap-2 text-sm">
               {locale === "ar" ? "عرض الكل" : "View All"}
               <Arrow size={16} />
             </Link>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-            {featuredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
+            {isLoading
+              ? Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="rounded-2xl bg-beige-dark/40 animate-pulse aspect-[4/5]" />
+                ))
+              : featuredProducts.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
           </div>
         </div>
       </section>
@@ -189,17 +205,18 @@ export default function HomePage() {
                 {locale === "ar" ? "وصل حديثاً" : "New Arrivals"}
               </h2>
               <p className="text-warm-gray mt-1">
-                {locale === "ar"
-                  ? "أحدث المنتجات في متجرنا"
-                  : "The latest additions to our collection"}
+                {locale === "ar" ? "أحدث المنتجات في متجرنا" : "The latest additions to our collection"}
               </p>
             </div>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-            {newArrivals
-              .map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
+            {isLoading
+              ? Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="rounded-2xl bg-beige-dark/40 animate-pulse aspect-[4/5]" />
+                ))
+              : newArrivals.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
           </div>
         </div>
       </section>
