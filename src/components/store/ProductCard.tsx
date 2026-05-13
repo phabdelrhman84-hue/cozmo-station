@@ -10,7 +10,7 @@ import { getDiscountPercentage } from "@/lib/utils";
 import type { Product } from "@/types";
 
 interface ProductCardProps {
-  product: Product;
+  product: Product & { handle?: string };
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
