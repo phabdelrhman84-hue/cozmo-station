@@ -7,7 +7,6 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { useCart } from "@/hooks/useCart";
 import ProductCard from "@/components/store/ProductCard";
 import { getDiscountPercentage } from "@/lib/utils";
-import { supabase } from "@/lib/supabase";
 import { getProduct, getShopifyProducts } from "@/lib/shopify";
 import {
   ShoppingBag,
@@ -64,31 +63,13 @@ export default function ProductDetailPage() {
           }
 
           setLoading(false);
-          return; // ✅ Got product from Shopify — skip Supabase
+          return; // ✅ Got product from Shopify
         }
       } catch (err) {
         console.log("Shopify product fetch error:", err);
-        // Shopify غير مُفعَّل أو ENV vars غير مُضبوطة — نكمل للـ Supabase
       }
 
-      // ── 2. Fallback: Supabase ───────────────────────────────────
-      const { data, error } = await supabase
-        .from("products")
-        .select("*")
-        .eq("slug", slug)
-        .single();
-
-      if (data) {
-        setProduct(data);
-        // Fetch related from Supabase
-        const { data: related } = await supabase
-          .from("products")
-          .select("*")
-          .eq("category", data.category)
-          .neq("id", data.id)
-          .limit(4);
-        if (related) setRelatedProducts(related);
-      }
+      // Shopify returned nothing — end loading
       setLoading(false);
     };
 
@@ -170,17 +151,11 @@ export default function ProductDetailPage() {
           {/* Image Gallery */}
           <div className="space-y-4">
             <div className="aspect-square rounded-2xl bg-white overflow-hidden relative group border border-beige-dark">
-              {product.main_image ? (
-                <img 
-                  src={product.main_image} 
-                  alt={name}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-[120px] bg-gradient-to-br from-beige to-beige-dark">
-                  {product.category === "Haircare" ? "💇‍♀️" : "🧴"}
-                </div>
-              )}
+              <img 
+                src={product.main_image && product.main_image.startsWith("http") ? product.main_image : "/placeholder.png"} 
+                alt={name}
+                className="w-full h-full object-cover"
+              />
               {/* Badges */}
               {discount > 0 && (
                 <span className="absolute top-4 start-4 px-3 py-1.5 bg-error text-white text-sm font-bold rounded-full">
@@ -194,9 +169,9 @@ export default function ProductDetailPage() {
               )}
             </div>
             {/* Thumbnail gallery — show additional images from Shopify */}
-            {product.images && product.images.length > 1 && (
+            {product.images && product.images.filter((img: string) => img.startsWith("http")).length > 1 && (
               <div className="grid grid-cols-5 gap-2">
-                {product.images.slice(0, 5).map((img: string, i: number) => (
+                {product.images.filter((img: string) => img.startsWith("http")).slice(0, 5).map((img: string, i: number) => (
                   <button
                     key={i}
                     onClick={() =>

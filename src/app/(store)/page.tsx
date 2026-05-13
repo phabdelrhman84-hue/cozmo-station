@@ -9,7 +9,6 @@ import FreeShippingBar from "@/components/store/FreeShippingBar";
 import CategoriesSection from "@/components/store/CategoriesSection";
 import HeroBanner from "@/components/store/HeroBanner";
 import { demoProducts } from "@/lib/data";
-import { supabase } from "@/lib/supabase";
 import { getShopifyProducts } from "@/lib/shopify";
 import { useState, useEffect } from "react";
 import {
@@ -34,14 +33,7 @@ export default function HomePage() {
     async function fetchData() {
       setIsLoading(true);
 
-      // ── Site Content من Supabase (دائماً) ──────────────────────────
-      const { data: contentData } = await supabase
-        .from("site_content")
-        .select("*")
-        .order("order_index", { ascending: true });
-      if (contentData) setThemeSections(contentData);
-
-      // ── Products: Shopify أولاً ← Supabase ← demoProducts ──────────
+      // ── Products: Shopify → demoProducts fallback ──────────────────
       try {
         const shopifyProducts = await getShopifyProducts(12);
         console.log("Shopify Data:", shopifyProducts);
@@ -50,23 +42,12 @@ export default function HomePage() {
         } else {
           setProducts(shopifyProducts);
           setNoShopifyProducts(false);
-          setIsLoading(false);
-          return; // تم الجلب من Shopify — لا حاجة لـ Supabase
         }
       } catch (err) {
         console.log("Shopify fetch error:", err);
         setNoShopifyProducts(true);
-        // Shopify غير مُفعَّل أو ENV vars غير مُضبوطة — نتجاهل ونكمل
       }
-
-      // Fallback: Supabase
-      const { data: prodData } = await supabase
-        .from("products")
-        .select("*")
-        .eq("is_active", true);
-
-      if (prodData && prodData.length > 0) setProducts(prodData);
-      // else: تبقى demoProducts (القيمة الافتراضية)
+      // If Shopify returned nothing, demoProducts (initial state) remain
 
       setIsLoading(false);
     }

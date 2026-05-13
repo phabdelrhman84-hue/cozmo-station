@@ -23,7 +23,9 @@ export default function ProductCard({ product }: ProductCardProps) {
     ? getDiscountPercentage(product.price_egp, product.compare_price_egp)
     : 0;
   const isOutOfStock = product.stock <= 0;
-  const isLocalImage = product.main_image?.startsWith("/");
+  const imageSrc = product.main_image && product.main_image.startsWith("http")
+    ? product.main_image
+    : "/placeholder.png";
 
   // ترجمة الـ Badges المبنية على خصائص المنتج الحالية
   const scienceBadge = discount > 0
@@ -72,20 +74,14 @@ export default function ProductCard({ product }: ProductCardProps) {
 
         {/* الصورة */}
         <Link href={`/product/${product.slug}`} className="block w-full h-full">
-          {product.main_image ? (
-            <Image
-              src={product.main_image}
-              alt={name}
-              fill
-              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-              className="object-cover object-center group-hover:scale-105 transition-transform duration-500 ease-out"
-              unoptimized={isLocalImage}
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-6xl bg-gradient-to-br from-beige to-beige-dark">
-              {product.category === "Haircare" ? "💇‍♀️" : "🧴"}
-            </div>
-          )}
+          <Image
+            src={imageSrc}
+            alt={name}
+            fill
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            className="object-cover object-center group-hover:scale-105 transition-transform duration-500 ease-out"
+            unoptimized={imageSrc === "/placeholder.png"}
+          />
         </Link>
       </div>
 

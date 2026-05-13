@@ -51,7 +51,6 @@ export interface ShopifyVariant {
   price: ShopifyMoneyV2;
   compareAtPrice: ShopifyMoneyV2 | null;
   availableForSale: boolean;
-  quantityAvailable: number;
 }
 
 export interface ShopifyProduct {
@@ -161,7 +160,10 @@ export function normalizeProduct(shopifyProduct: ShopifyProduct): Product {
       ? parseFloat(compareAtPriceRaw)
       : null;
 
-  const stock = firstVariant?.quantityAvailable ?? 0;
+  // المخزون — نعتمد على availableForSale بدلاً من quantityAvailable
+  // (لا نملك scope: unauthenticated_read_product_inventory)
+  const inStock = firstVariant?.availableForSale ?? false;
+  const stock = inStock ? 99 : 0; // قيمة افتراضية — المخزون الفعلي غير متاح من Storefront API
 
   return {
     // المعرّف: نستخدم الجزء الأخير من Shopify GID
@@ -206,8 +208,8 @@ export function normalizeProduct(shopifyProduct: ShopifyProduct): Product {
     meta_description_ar: null,
     meta_description_en: null,
 
-    // الحالة — متاح للبيع إذا كان هناك stock
-    is_active: firstVariant?.availableForSale ?? stock > 0,
+    // الحالة — متاح للبيع
+    is_active: firstVariant?.availableForSale ?? false,
     is_new: shopifyProduct.tags.includes("new") || shopifyProduct.tags.includes("new-arrival"),
     is_featured: shopifyProduct.tags.includes("featured") || shopifyProduct.tags.includes("best-seller"),
 
@@ -247,7 +249,6 @@ const PRODUCT_FRAGMENT = `
           price { amount currencyCode }
           compareAtPrice { amount currencyCode }
           availableForSale
-          quantityAvailable
         }
       }
     }

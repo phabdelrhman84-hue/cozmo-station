@@ -1,30 +1,8 @@
 import type { Product, ShippingZone, Order } from "@/types";
-import { supabase } from "./supabase";
 
-export async function getProducts() {
-  const { data, error } = await supabase
-    .from('products')
-    .select('*')
-    .order('created_at', { ascending: false });
-
-  if (error || !data || data.length === 0) {
-    console.log('Using demo products (Supabase error or empty table)');
-    return demoProducts;
-  }
-  return data;
-}
-
-export async function getOrders() {
-  const { data, error } = await supabase
-    .from('orders')
-    .select('*')
-    .order('created_at', { ascending: false });
-
-  if (error || !data) {
-    return [];
-  }
-  return data;
-}
+// ── Static demo data (no Supabase dependency) ──────────────────
+// Products are now fetched from Shopify via src/lib/shopify.ts.
+// demoProducts below serve as a local fallback only.
 
 export const demoProducts: Product[] = [
   {

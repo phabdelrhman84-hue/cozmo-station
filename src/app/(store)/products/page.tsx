@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useMemo, Suspense } from "react";
+import { useState, useMemo, Suspense, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLanguage } from "@/hooks/useLanguage";
 import ProductCard from "@/components/store/ProductCard";
 import { demoProducts } from "@/lib/data";
+import { getShopifyProducts } from "@/lib/shopify";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 
 function ProductsPageContent() {
@@ -17,7 +18,28 @@ function ProductsPageContent() {
   const [category, setCategory] = useState(initialCategory);
   const [sortBy, setSortBy] = useState("newest");
   const [showFilters, setShowFilters] = useState(false);
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 5000]);
+  const [allProducts, setAllProducts] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchProducts() {
+      setIsLoading(true);
+      try {
+        const shopifyData = await getShopifyProducts(50);
+        if (shopifyData && shopifyData.length > 0) {
+          setAllProducts(shopifyData);
+        } else {
+          setAllProducts(demoProducts);
+        }
+      } catch (err) {
+        console.log("Shopify fetch error:", err);
+        setAllProducts(demoProducts);
+      }
+      setIsLoading(false);
+    }
+    fetchProducts();
+  }, []);
 
   const categories = [
     { id: "all", label: t("products.all") },
@@ -26,57 +48,57 @@ function ProductsPageContent() {
   ];
 
   const filteredProducts = useMemo(() => {
-    let products = [...demoProducts];
+    let products = [...allProducts];
+
+    // Helper functions for Shopify & Mock data compatibility
+    const getPrice = (p: any) => parseFloat(p.price || p.price_egp || p?.priceRange?.minVariantPrice?.amount || 0);
+    const getName = (p: any) => (p.title || p.name_en || p.name || "").toLowerCase();
+    const getCategory = (p: any) => (p.productType || p.category || "").toLowerCase();
 
     // Category filter
     if (category !== "all") {
-      products = products.filter(
-        (p) => p.category.toLowerCase() === category.toLowerCase()
-      );
+      products = products.filter((p) => getCategory(p).includes(category.toLowerCase()));
     }
 
     // Search filter
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
-      products = products.filter(
-        (p) =>
-          p.name_en.toLowerCase().includes(q) ||
-          p.name_ar.includes(q) ||
-          p.brand.toLowerCase().includes(q)
-      );
+      products = products.filter((p) => {
+        const nameMatch = getName(p).includes(q);
+        const brandMatch = (p.vendor || p.brand || "").toLowerCase().includes(q);
+        const arMatch = (p.name_ar || "").includes(q);
+        return nameMatch || brandMatch || arMatch;
+      });
     }
 
     // Price filter
-    products = products.filter(
-      (p) => p.price_egp >= priceRange[0] && p.price_egp <= priceRange[1]
-    );
+    products = products.filter((p) => {
+      const price = getPrice(p);
+      return price >= priceRange[0] && price <= priceRange[1];
+    });
 
     // Sort
     switch (sortBy) {
       case "price_asc":
-        products.sort((a, b) => a.price_egp - b.price_egp);
+        products.sort((a, b) => getPrice(a) - getPrice(b));
         break;
       case "price_desc":
-        products.sort((a, b) => b.price_egp - a.price_egp);
+        products.sort((a, b) => getPrice(b) - getPrice(a));
         break;
       case "name":
-        products.sort((a, b) =>
-          locale === "ar"
-            ? a.name_ar.localeCompare(b.name_ar)
-            : a.name_en.localeCompare(b.name_en)
-        );
+        products.sort((a, b) => getName(a).localeCompare(getName(b)));
         break;
       case "newest":
       default:
-        products.sort(
-          (a, b) =>
-            new Date(b.created_at).getTime() -
-            new Date(a.created_at).getTime()
-        );
+        products.sort((a, b) => {
+          const dateA = new Date(a.createdAt || a.created_at || 0).getTime();
+          const dateB = new Date(b.createdAt || b.created_at || 0).getTime();
+          return dateB - dateA;
+        });
     }
 
     return products;
-  }, [category, searchQuery, sortBy, priceRange, locale]);
+  }, [category, searchQuery, sortBy, priceRange, locale, allProducts]);
 
   return (
     <div className="min-h-screen bg-beige-light">
@@ -121,11 +143,10 @@ function ProductsPageContent() {
               <button
                 key={cat.id}
                 onClick={() => setCategory(cat.id)}
-                className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${
-                  category === cat.id
+                className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${category === cat.id
                     ? "bg-pink text-white shadow-sm"
                     : "bg-white text-charcoal border border-beige-dark hover:border-pink"
-                }`}
+                  }`}
               >
                 {cat.label}
               </button>
@@ -136,11 +157,10 @@ function ProductsPageContent() {
             {/* Filter Toggle */}
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium border transition-all ${
-                showFilters
+              className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium border transition-all ${showFilters
                   ? "bg-pink text-white border-pink"
                   : "bg-white text-charcoal border-beige-dark hover:border-pink"
-              }`}
+                }`}
             >
               <SlidersHorizontal size={16} />
               {t("products.filter")}
@@ -204,7 +224,13 @@ function ProductsPageContent() {
         </p>
 
         {/* Products Grid */}
-        {filteredProducts.length > 0 ? (
+        {isLoading ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="rounded-2xl bg-beige-dark/40 animate-pulse aspect-[4/5]" />
+            ))}
+          </div>
+        ) : filteredProducts.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
             {filteredProducts.map((product) => (
               <ProductCard key={product.id} product={product} />
