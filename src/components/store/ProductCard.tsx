@@ -73,7 +73,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         </div>
 
         {/* الصورة */}
-        <Link href={`/product/${product.slug}`} className="block w-full h-full">
+        <Link href={`/product/${product.handle || product.slug}`} className="block w-full h-full">
           <Image
             src={imageSrc}
             alt={name}
@@ -94,7 +94,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         </span>
 
         {/* الاسم */}
-        <Link href={`/product/${product.slug}`} className="mb-3">
+        <Link href={`/product/${product.handle || product.slug}`} className="mb-3">
           <h3 className="font-bold text-charcoal leading-snug line-clamp-2 group-hover:text-pink-dark transition-colors duration-200">
             {name}
           </h3>

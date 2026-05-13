@@ -22,7 +22,7 @@ import {
 
 export default function ProductDetailPage() {
   const params = useParams();
-  const slug = params.slug as string;
+  const slug = decodeURIComponent(params.slug as string);
   const { locale, t } = useLanguage();
   const { addItem } = useCart();
 
