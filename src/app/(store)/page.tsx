@@ -28,6 +28,7 @@ export default function HomePage() {
   const [themeSections, setThemeSections] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>(demoProducts);
   const [isLoading, setIsLoading] = useState(true);
+  const [noShopifyProducts, setNoShopifyProducts] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -43,12 +44,18 @@ export default function HomePage() {
       // ── Products: Shopify أولاً ← Supabase ← demoProducts ──────────
       try {
         const shopifyProducts = await getShopifyProducts(12);
-        if (shopifyProducts.length > 0) {
+        console.log("Shopify Data:", shopifyProducts);
+        if (!shopifyProducts || shopifyProducts.length === 0) {
+          setNoShopifyProducts(true);
+        } else {
           setProducts(shopifyProducts);
+          setNoShopifyProducts(false);
           setIsLoading(false);
           return; // تم الجلب من Shopify — لا حاجة لـ Supabase
         }
-      } catch {
+      } catch (err) {
+        console.log("Shopify fetch error:", err);
+        setNoShopifyProducts(true);
         // Shopify غير مُفعَّل أو ENV vars غير مُضبوطة — نتجاهل ونكمل
       }
 
@@ -68,7 +75,7 @@ export default function HomePage() {
 
   const featuredProducts = products.filter((p) => p.is_featured);
   const newArrivals = products.filter((p) => p.is_new);
-  
+
   const getSection = (type: string) => themeSections.find(s => s.type === type);
   const heroSection = getSection('hero');
   const featuredSection = getSection('featured_products');
@@ -164,33 +171,41 @@ export default function HomePage() {
 
       {/* ===== FEATURED PRODUCTS ===== */}
       {(!featuredSection || featuredSection.is_visible) && (
-      <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between mb-10">
-            <div>
-              <h2 className="text-3xl font-bold text-charcoal">
-                {featuredSection ? (locale === 'ar' ? featuredSection.content.title_ar : featuredSection.content.title_en) : (locale === "ar" ? "منتجات مميزة" : "Featured Products")}
-              </h2>
-              <p className="text-warm-gray mt-1">
-                {locale === "ar" ? "أفضل المنتجات المختارة بعناية" : "Our carefully curated best sellers"}
-              </p>
+        <section className="py-16 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between mb-10">
+              <div>
+                <h2 className="text-3xl font-bold text-charcoal">
+                  {featuredSection ? (locale === 'ar' ? featuredSection.content.title_ar : featuredSection.content.title_en) : (locale === "ar" ? "منتجات مميزة" : "Featured Products")}
+                </h2>
+                <p className="text-warm-gray mt-1">
+                  {locale === "ar" ? "أفضل المنتجات المختارة بعناية" : "Our carefully curated best sellers"}
+                </p>
+              </div>
+              <Link href="/products" className="btn-secondary flex items-center gap-2 text-sm">
+                {locale === "ar" ? "عرض الكل" : "View All"}
+                <Arrow size={16} />
+              </Link>
             </div>
-            <Link href="/products" className="btn-secondary flex items-center gap-2 text-sm">
-              {locale === "ar" ? "عرض الكل" : "View All"}
-              <Arrow size={16} />
-            </Link>
+            {noShopifyProducts && featuredProducts.length === 0 ? (
+              <div className="col-span-full bg-amber-50 border border-amber-300 rounded-2xl p-8 text-center">
+                <p className="text-lg text-amber-800 font-semibold" dir="rtl">
+                  لم يتم جلب المنتجات من شوبيفاي بعد. يرجى مراجعة إعدادات الـ Sales Channel.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+                {isLoading
+                  ? Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className="rounded-2xl bg-beige-dark/40 animate-pulse aspect-[4/5]" />
+                  ))
+                  : featuredProducts.map((product) => (
+                    <ProductCard key={product.id} product={product} />
+                  ))}
+              </div>
+            )}
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-            {isLoading
-              ? Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="rounded-2xl bg-beige-dark/40 animate-pulse aspect-[4/5]" />
-                ))
-              : featuredProducts.map((product) => (
-                  <ProductCard key={product.id} product={product} />
-                ))}
-          </div>
-        </div>
-      </section>
+        </section>
       )}
 
       {/* ===== ROUTINE BUILDER (AOV Booster) ===== */}
@@ -209,15 +224,23 @@ export default function HomePage() {
               </p>
             </div>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-            {isLoading
-              ? Array.from({ length: 4 }).map((_, i) => (
+          {noShopifyProducts && newArrivals.length === 0 ? (
+            <div className="col-span-full bg-amber-50 border border-amber-300 rounded-2xl p-8 text-center">
+              <p className="text-lg text-amber-800 font-semibold" dir="rtl">
+                لم يتم جلب المنتجات من شوبيفاي بعد. يرجى مراجعة إعدادات الـ Sales Channel.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+              {isLoading
+                ? Array.from({ length: 4 }).map((_, i) => (
                   <div key={i} className="rounded-2xl bg-beige-dark/40 animate-pulse aspect-[4/5]" />
                 ))
-              : newArrivals.map((product) => (
+                : newArrivals.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
-          </div>
+            </div>
+          )}
         </div>
       </section>
 

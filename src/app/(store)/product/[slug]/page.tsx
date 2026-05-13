@@ -8,8 +8,6 @@ import { useCart } from "@/hooks/useCart";
 import ProductCard from "@/components/store/ProductCard";
 import { getDiscountPercentage } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
-import { getShopifyProductByHandle, getShopifyProducts } from "@/lib/shopify";
-import { demoProducts } from "@/lib/data";
 import {
   ShoppingBag,
   Check,
@@ -40,52 +38,23 @@ export default function ProductDetailPage() {
   useEffect(() => {
     const fetchProduct = async () => {
       setLoading(true);
-
-      // ── 1. Shopify أولاً ──────────────────────────────────────────
-      try {
-        const shopifyProduct = await getShopifyProductByHandle(slug);
-        if (shopifyProduct) {
-          setProduct(shopifyProduct);
-          // Related: كل المنتجات من Shopify مفلترة بنفس الـ category
-          const allShopify = await getShopifyProducts(20);
-          const related = allShopify
-            .filter((p) => p.category === shopifyProduct.category && p.id !== shopifyProduct.id)
-            .slice(0, 4);
-          setRelatedProducts(related);
-          setLoading(false);
-          return;
-        }
-      } catch {
-        // Shopify غير مُفعَّل — نكمل للـ Supabase
-      }
-
-      // ── 2. Supabase fallback ─────────────────────────────────────
-      const { data } = await supabase
-        .from("products")
-        .select("*")
-        .eq("slug", slug)
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('slug', slug)
         .single();
-
+      
       if (data) {
         setProduct(data);
+        // Fetch related
         const { data: related } = await supabase
-          .from("products")
-          .select("*")
-          .eq("category", data.category)
-          .neq("id", data.id)
+          .from('products')
+          .select('*')
+          .eq('category', data.category)
+          .neq('id', data.id)
           .limit(4);
         if (related) setRelatedProducts(related);
-      } else {
-        // ── 3. demoProducts fallback ─────────────────────────────
-        const demo = demoProducts.find((p) => p.slug === slug);
-        if (demo) {
-          setProduct(demo);
-          setRelatedProducts(
-            demoProducts.filter((p) => p.category === demo.category && p.id !== demo.id).slice(0, 4)
-          );
-        }
       }
-
       setLoading(false);
     };
 
