@@ -320,6 +320,9 @@ export async function getShopifyProductByHandle(
   return normalizeProduct(response.body.productByHandle);
 }
 
+// ── 4b-alias. اسم مختصر للاستيراد السهل ──────────────────────
+export const getProduct = getShopifyProductByHandle;
+
 // ── 4c. منتجات collection بعينها ─────────────────────────────
 
 type GetCollectionData = {

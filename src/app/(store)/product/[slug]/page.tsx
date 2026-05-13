@@ -8,6 +8,7 @@ import { useCart } from "@/hooks/useCart";
 import ProductCard from "@/components/store/ProductCard";
 import { getDiscountPercentage } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
+import { getProduct, getShopifyProducts } from "@/lib/shopify";
 import {
   ShoppingBag,
   Check,
@@ -38,20 +39,53 @@ export default function ProductDetailPage() {
   useEffect(() => {
     const fetchProduct = async () => {
       setLoading(true);
+
+      // ── 1. Try Shopify first ────────────────────────────────────
+      try {
+        const shopifyProduct = await getProduct(slug);
+        console.log("Shopify Product Data:", shopifyProduct);
+
+        if (shopifyProduct) {
+          setProduct(shopifyProduct);
+
+          // Fetch related products from Shopify (same category, exclude current)
+          try {
+            const allShopify = await getShopifyProducts(12);
+            const related = allShopify
+              .filter(
+                (p) =>
+                  p.category === shopifyProduct.category &&
+                  p.id !== shopifyProduct.id
+              )
+              .slice(0, 4);
+            if (related.length > 0) setRelatedProducts(related);
+          } catch {
+            // Related products fetch failed — non-critical
+          }
+
+          setLoading(false);
+          return; // ✅ Got product from Shopify — skip Supabase
+        }
+      } catch (err) {
+        console.log("Shopify product fetch error:", err);
+        // Shopify غير مُفعَّل أو ENV vars غير مُضبوطة — نكمل للـ Supabase
+      }
+
+      // ── 2. Fallback: Supabase ───────────────────────────────────
       const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .eq('slug', slug)
+        .from("products")
+        .select("*")
+        .eq("slug", slug)
         .single();
-      
+
       if (data) {
         setProduct(data);
-        // Fetch related
+        // Fetch related from Supabase
         const { data: related } = await supabase
-          .from('products')
-          .select('*')
-          .eq('category', data.category)
-          .neq('id', data.id)
+          .from("products")
+          .select("*")
+          .eq("category", data.category)
+          .neq("id", data.id)
           .limit(4);
         if (related) setRelatedProducts(related);
       }
@@ -159,6 +193,33 @@ export default function ProductDetailPage() {
                 </span>
               )}
             </div>
+            {/* Thumbnail gallery — show additional images from Shopify */}
+            {product.images && product.images.length > 1 && (
+              <div className="grid grid-cols-5 gap-2">
+                {product.images.slice(0, 5).map((img: string, i: number) => (
+                  <button
+                    key={i}
+                    onClick={() =>
+                      setProduct((prev: any) => ({
+                        ...prev,
+                        main_image: img,
+                      }))
+                    }
+                    className={`aspect-square rounded-xl overflow-hidden border-2 transition-all ${
+                      product.main_image === img
+                        ? "border-pink shadow-md"
+                        : "border-beige-dark hover:border-pink/50"
+                    }`}
+                  >
+                    <img
+                      src={img}
+                      alt={`${name} ${i + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Product Info */}
@@ -312,7 +373,15 @@ export default function ProductDetailPage() {
                 </button>
               </div>
               <div className="text-warm-gray leading-relaxed">
-                {activeTab === "description" ? description : ingredients}
+                {activeTab === "description" ? (
+                  description ? (
+                    <div dangerouslySetInnerHTML={{ __html: description }} />
+                  ) : (
+                    <p>{locale === "ar" ? "لا يوجد وصف بعد." : "No description available."}</p>
+                  )
+                ) : (
+                  ingredients || (locale === "ar" ? "لا توجد مكونات مدرجة." : "No ingredients listed.")
+                )}
               </div>
             </div>
           </div>
