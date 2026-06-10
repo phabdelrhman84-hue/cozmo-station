@@ -1,12 +1,69 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useLanguage } from "@/hooks/useLanguage";
+import { getShopifyProducts } from "@/lib/shopify";
 import { ArrowRight, ArrowLeft } from "lucide-react";
 
 export default function CategoriesSection() {
   const { locale } = useLanguage();
   const Arrow = locale === "ar" ? ArrowLeft : ArrowRight;
+
+  const [counts, setCounts] = useState({
+    skincare: 128,
+    haircare: 64,
+    serum: 45,
+    masks: 38
+  });
+
+  useEffect(() => {
+    async function loadProductCounts() {
+      try {
+        const products = await getShopifyProducts(100);
+        if (products && products.length > 0) {
+          const getCategory = (p: any) => (p.productType || p.category || "").toLowerCase();
+          const getName = (p: any) => (p.title || p.name_en || p.name || "").toLowerCase();
+          const getNameAr = (p: any) => (p.name_ar || "").toLowerCase();
+          const getTags = (p: any) => (p.tags || []).map((t: string) => t.toLowerCase());
+
+          const skincareCount = products.filter(p => {
+            const cat = getCategory(p);
+            const tags = getTags(p);
+            return cat.includes("skin") || cat.includes("face") || cat.includes("بشرة") || cat.includes("بشره") || tags.includes("skincare") || tags.includes("skin") || getName(p).includes("skin") || getNameAr(p).includes("بشرة") || getNameAr(p).includes("بشره");
+          }).length;
+
+          const haircareCount = products.filter(p => {
+            const cat = getCategory(p);
+            const tags = getTags(p);
+            return cat.includes("hair") || cat.includes("shampoo") || cat.includes("conditioner") || cat.includes("شعر") || tags.includes("haircare") || tags.includes("hair") || getName(p).includes("hair") || getName(p).includes("shampoo") || getNameAr(p).includes("شعر");
+          }).length;
+
+          const serumCount = products.filter(p => {
+            const cat = getCategory(p);
+            const tags = getTags(p);
+            return cat.includes("serum") || cat.includes("ampoule") || cat.includes("essence") || getName(p).includes("serum") || getName(p).includes("ampoule") || getName(p).includes("essence") || getNameAr(p).includes("سيروم") || getNameAr(p).includes("أمبول") || tags.includes("serum") || tags.includes("essence");
+          }).length;
+
+          const masksCount = products.filter(p => {
+            const cat = getCategory(p);
+            const tags = getTags(p);
+            return cat.includes("mask") || cat.includes("peel") || cat.includes("peeling") || cat.includes("ماسك") || cat.includes("تقشير") || tags.includes("mask") || tags.includes("masks") || tags.includes("peel") || getName(p).includes("mask") || getName(p).includes("peel") || getNameAr(p).includes("ماسك") || getNameAr(p).includes("تقشير");
+          }).length;
+
+          setCounts({
+            skincare: skincareCount,
+            haircare: haircareCount,
+            serum: serumCount,
+            masks: masksCount
+          });
+        }
+      } catch (err) {
+        console.error("Error loading category counts:", err);
+      }
+    }
+    loadProductCounts();
+  }, []);
 
   const categories = [
     {
@@ -14,7 +71,7 @@ export default function CategoriesSection() {
       emoji: "🌸",
       label_ar: "روتين البشرة",
       label_en: "Skincare",
-      count: 128,
+      count: counts.skincare,
       gradient: "from-[#FCE4EC] via-[#F8BBD0] to-[#E91E63]",
     },
     {
@@ -22,7 +79,7 @@ export default function CategoriesSection() {
       emoji: "🌿",
       label_ar: "عناية بالشعر",
       label_en: "Haircare",
-      count: 64,
+      count: counts.haircare,
       gradient: "from-[#E8F5E9] via-[#C8E6C9] to-[#66BB6A]",
     },
     {
@@ -30,7 +87,7 @@ export default function CategoriesSection() {
       emoji: "✨",
       label_ar: "سيروم وأمبول",
       label_en: "Serum & Ampoule",
-      count: 45,
+      count: counts.serum,
       gradient: "from-[#FFF8E1] via-[#FFECB3] to-[#FFA726]",
     },
     {
@@ -38,7 +95,7 @@ export default function CategoriesSection() {
       emoji: "💎",
       label_ar: "ماسك وتقشير",
       label_en: "Masks & Peeling",
-      count: 38,
+      count: counts.masks,
       gradient: "from-[#E3F2FD] via-[#BBDEFB] to-[#42A5F5]",
     },
   ];

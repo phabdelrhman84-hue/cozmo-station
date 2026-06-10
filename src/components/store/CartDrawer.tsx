@@ -112,9 +112,17 @@ export default function CartDrawer() {
               >
                 {/* Product Image */}
                 <div className="w-20 h-20 rounded-lg bg-beige flex-shrink-0 overflow-hidden">
-                  <div className="w-full h-full bg-gradient-to-br from-pink-light/30 to-sage-light/30 flex items-center justify-center text-2xl">
-                    🧴
-                  </div>
+                  {item.product.main_image ? (
+                    <img 
+                      src={item.product.main_image} 
+                      alt={locale === "ar" ? item.product.name_ar : item.product.name_en} 
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-pink-light/30 to-sage-light/30 flex items-center justify-center text-2xl">
+                      🧴
+                    </div>
+                  )}
                 </div>
 
                 {/* Product Info */}
@@ -187,12 +195,12 @@ export default function CartDrawer() {
             >
               {t("cart.checkout")}
             </Link>
-            <Link
-              href="/cart"
+             <Link
+              href="/products"
               onClick={closeCart}
               className="btn-secondary block w-full text-center text-sm"
             >
-              {locale === "ar" ? "عرض السلة" : "View Cart"}
+              {locale === "ar" ? "مواصلة التسوق" : "Continue Shopping"}
             </Link>
           </div>
         )}
