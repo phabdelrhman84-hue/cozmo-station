@@ -1,12 +1,28 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLanguage } from "@/hooks/useLanguage";
+import { getShopifyProducts } from "@/lib/shopify";
+import { useCart } from "@/hooks/useCart";
 
 export default function RoutineBuilder() {
   const { locale } = useLanguage();
+  const { addItem } = useCart();
+  const [added, setAdded] = useState(false);
+  const [shopifyProducts, setShopifyProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   
-  const steps = [
+  interface RoutineStep {
+    id: number;
+    emoji: string;
+    name_ar: string;
+    name_en: string;
+    product: string;
+    price: number;
+    rawProduct?: any;
+  }
+
+  const steps: RoutineStep[] = [
     {
       id: 1,
       emoji: "🧼",
@@ -49,6 +65,79 @@ export default function RoutineBuilder() {
     },
   ];
 
+  useEffect(() => {
+    async function loadProducts() {
+      try {
+        const data = await getShopifyProducts(100);
+        if (data && data.length > 0) {
+          setShopifyProducts(data);
+        }
+      } catch (err) {
+        console.error("RoutineBuilder product load error:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadProducts();
+  }, []);
+
+  const getProductForStep = (stepId: number) => {
+    const defaultStep = steps.find(s => s.id === stepId)!;
+    if (shopifyProducts.length === 0) return defaultStep;
+
+    let matchedProduct: any = null;
+    
+    if (stepId === 1) { // Cleanser
+      matchedProduct = shopifyProducts.find(p => {
+        const name = (p.title || p.name_en || "").toLowerCase();
+        const cat = (p.productType || p.category || "").toLowerCase();
+        const tags = (p.tags || []).map((t: string) => t.toLowerCase());
+        return cat.includes("cleanser") || cat.includes("cleanse") || name.includes("cleanser") || name.includes("cleanse") || tags.includes("cleanser") || tags.includes("cleaner");
+      });
+    } else if (stepId === 2) { // Toner
+      matchedProduct = shopifyProducts.find(p => {
+        const name = (p.title || p.name_en || "").toLowerCase();
+        const cat = (p.productType || p.category || "").toLowerCase();
+        const tags = (p.tags || []).map((t: string) => t.toLowerCase());
+        return cat.includes("toner") || name.includes("toner") || tags.includes("toner");
+      });
+    } else if (stepId === 3) { // Serum
+      matchedProduct = shopifyProducts.find(p => {
+        const name = (p.title || p.name_en || "").toLowerCase();
+        const cat = (p.productType || p.category || "").toLowerCase();
+        const tags = (p.tags || []).map((t: string) => t.toLowerCase());
+        return cat.includes("serum") || cat.includes("ampoule") || cat.includes("essence") || name.includes("serum") || name.includes("ampoule") || name.includes("essence") || tags.includes("serum") || tags.includes("essence");
+      });
+    } else if (stepId === 4) { // Moisturizer
+      matchedProduct = shopifyProducts.find(p => {
+        const name = (p.title || p.name_en || "").toLowerCase();
+        const cat = (p.productType || p.category || "").toLowerCase();
+        const tags = (p.tags || []).map((t: string) => t.toLowerCase());
+        return cat.includes("cream") || cat.includes("moistur") || name.includes("cream") || name.includes("moistur") || tags.includes("cream") || tags.includes("moisturizer") || cat.includes("lotion") || name.includes("lotion");
+      });
+    } else if (stepId === 5) { // Sunscreen
+      matchedProduct = shopifyProducts.find(p => {
+        const name = (p.title || p.name_en || "").toLowerCase();
+        const cat = (p.productType || p.category || "").toLowerCase();
+        const tags = (p.tags || []).map((t: string) => t.toLowerCase());
+        return cat.includes("sun") || cat.includes("spf") || name.includes("sun") || name.includes("spf") || tags.includes("sunscreen") || tags.includes("sunblock");
+      });
+    }
+
+    if (matchedProduct) {
+      return {
+        ...defaultStep,
+        product: locale === "ar" ? (matchedProduct.name_ar || matchedProduct.title) : matchedProduct.title,
+        price: matchedProduct.price_egp || matchedProduct.price,
+        rawProduct: matchedProduct
+      };
+    }
+
+    return defaultStep;
+  };
+
+  const dynamicSteps = steps.map(step => getProductForStep(step.id));
+
   const [selectedSteps, setSelectedSteps] = useState<number[]>([1, 2, 3]);
 
   const toggleStep = (id: number) => {
@@ -57,12 +146,35 @@ export default function RoutineBuilder() {
     );
   };
 
-  const total = steps
+  const total = dynamicSteps
     .filter((step) => selectedSteps.includes(step.id))
     .reduce((sum, step) => sum + step.price, 0);
 
   const discounted = Math.round(total * 0.75);
   const savings = total - discounted;
+
+  const handleAddRoutineToCart = () => {
+    dynamicSteps
+      .filter((step) => selectedSteps.includes(step.id))
+      .forEach((step) => {
+        if (step.rawProduct) {
+          addItem(step.rawProduct, 1);
+        } else {
+          addItem({
+            id: step.id * 100000,
+            name_ar: step.name_ar,
+            name_en: step.name_en,
+            price_egp: step.price,
+            stock: 99,
+            main_image: "/placeholder.png",
+            images: ["/placeholder.png"],
+            slug: "mock-product-" + step.id,
+          } as any, 1);
+        }
+      });
+    setAdded(true);
+    setTimeout(() => setAdded(false), 2000);
+  };
 
   return (
     <section className="bg-charcoal text-white py-20 px-4 sm:px-6 lg:px-8">
@@ -86,7 +198,7 @@ export default function RoutineBuilder() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mt-12">
-          {steps.map((step) => {
+          {dynamicSteps.map((step) => {
             const isSelected = selectedSteps.includes(step.id);
             return (
               <div
@@ -136,8 +248,17 @@ export default function RoutineBuilder() {
               {locale === "ar" ? "مع خصم الباقة" : "with bundle discount"}
             </div>
           </div>
-          <button className="bg-pink text-charcoal font-bold px-8 py-4 rounded-full w-full md:w-auto hover:bg-pink-light transition-colors">
-            {locale === "ar" ? "أضيفي الروتين للسلة 🛒" : "Add Routine to Cart 🛒"}
+          <button 
+            onClick={handleAddRoutineToCart}
+            className={`font-bold px-8 py-4 rounded-full w-full md:w-auto transition-colors ${
+              added 
+                ? "bg-sage text-white" 
+                : "bg-pink text-charcoal hover:bg-pink-light"
+            }`}
+          >
+            {added 
+              ? (locale === "ar" ? "تمت إضافة الروتين للسلة! ✓" : "Routine Added! ✓")
+              : (locale === "ar" ? `أضيفي الروتين للسلة (${selectedSteps.length}) 🛒` : `Add Routine to Cart (${selectedSteps.length}) 🛒`)}
           </button>
         </div>
       </div>
