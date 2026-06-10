@@ -42,9 +42,11 @@ function ProductsPageContent() {
   }, []);
 
   const categories = [
-    { id: "all", label: t("products.all") },
-    { id: "skincare", label: t("products.skincare") },
-    { id: "haircare", label: t("products.haircare") },
+    { id: "all", label: locale === "ar" ? "الكل" : "All" },
+    { id: "skincare", label: locale === "ar" ? "روتين البشرة" : "Skincare" },
+    { id: "haircare", label: locale === "ar" ? "عناية بالشعر" : "Haircare" },
+    { id: "serum", label: locale === "ar" ? "سيروم وأمبول" : "Serum & Ampoule" },
+    { id: "masks", label: locale === "ar" ? "ماسك وتقشير" : "Mask & Peeling" },
   ];
 
   const filteredProducts = useMemo(() => {
@@ -57,7 +59,26 @@ function ProductsPageContent() {
 
     // Category filter
     if (category !== "all") {
-      products = products.filter((p) => getCategory(p).includes(category.toLowerCase()));
+      products = products.filter((p) => {
+        const cat = getCategory(p);
+        const name = getName(p);
+        const nameAr = (p.name_ar || "").toLowerCase();
+        const tags = (p.tags || []).map((t: string) => t.toLowerCase());
+
+        if (category === "skincare") {
+          return cat.includes("skin") || cat.includes("face") || cat.includes("بشرة") || cat.includes("بشره") || tags.includes("skincare") || tags.includes("skin") || name.includes("skin") || nameAr.includes("بشرة") || nameAr.includes("بشره");
+        }
+        if (category === "haircare") {
+          return cat.includes("hair") || cat.includes("shampoo") || cat.includes("conditioner") || cat.includes("شعر") || tags.includes("haircare") || tags.includes("hair") || name.includes("hair") || name.includes("shampoo") || nameAr.includes("شعر");
+        }
+        if (category === "serum") {
+          return cat.includes("serum") || cat.includes("ampoule") || cat.includes("سيروم") || cat.includes("أمبول") || tags.includes("serum") || tags.includes("ampoule") || name.includes("serum") || name.includes("ampoule") || nameAr.includes("سيروم") || nameAr.includes("أمبول");
+        }
+        if (category === "masks") {
+          return cat.includes("mask") || cat.includes("peel") || cat.includes("peeling") || cat.includes("ماسك") || cat.includes("تقشير") || tags.includes("mask") || tags.includes("masks") || tags.includes("peel") || name.includes("mask") || name.includes("peel") || nameAr.includes("ماسك") || nameAr.includes("تقشير");
+        }
+        return cat.includes(category.toLowerCase());
+      });
     }
 
     // Search filter
