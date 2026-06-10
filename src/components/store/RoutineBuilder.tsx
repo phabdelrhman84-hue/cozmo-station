@@ -99,9 +99,27 @@ export default function RoutineBuilder() {
     if (shopifyProducts.length === 0) return defaultStep;
 
     let matchedProduct: any = null;
+
+    const isSkincareProduct = (p: any) => {
+      const name = (p.title || p.name_en || "").toLowerCase();
+      const cat = (p.productType || p.category || "").toLowerCase();
+      const nameAr = (p.name_ar || "").toLowerCase();
+      
+      const isHair = cat.includes("hair") || name.includes("hair") || nameAr.includes("شعر") || cat.includes("shampoo") || name.includes("shampoo");
+      const isBody = cat.includes("body") || name.includes("body") || nameAr.includes("جسم") || nameAr.includes("شاور");
+      
+      return !isHair && !isBody;
+    };
+
+    const isSpecializedTreatment = (p: any) => {
+      const name = (p.title || p.name_en || "").toLowerCase();
+      const nameAr = (p.name_ar || "").toLowerCase();
+      return name.includes("booster") || name.includes("retinal") || name.includes("retinol") || nameAr.includes("تجاعيد") || nameAr.includes("ريتينول") || nameAr.includes("ريتينال") || nameAr.includes("بوستر") || name.includes("anti-wrinkle") || name.includes("anti-aging");
+    };
     
     if (stepId === 1) { // Cleanser
       matchedProduct = shopifyProducts.find(p => {
+        if (!isSkincareProduct(p)) return false;
         const name = (p.title || p.name_en || "").toLowerCase();
         const cat = (p.productType || p.category || "").toLowerCase();
         const tags = (p.tags || []).map((t: string) => t.toLowerCase());
@@ -109,6 +127,7 @@ export default function RoutineBuilder() {
       });
     } else if (stepId === 2) { // Toner
       matchedProduct = shopifyProducts.find(p => {
+        if (!isSkincareProduct(p)) return false;
         const name = (p.title || p.name_en || "").toLowerCase();
         const cat = (p.productType || p.category || "").toLowerCase();
         const tags = (p.tags || []).map((t: string) => t.toLowerCase());
@@ -116,6 +135,7 @@ export default function RoutineBuilder() {
       });
     } else if (stepId === 3) { // Serum
       matchedProduct = shopifyProducts.find(p => {
+        if (!isSkincareProduct(p)) return false;
         const name = (p.title || p.name_en || "").toLowerCase();
         const cat = (p.productType || p.category || "").toLowerCase();
         const tags = (p.tags || []).map((t: string) => t.toLowerCase());
@@ -123,6 +143,7 @@ export default function RoutineBuilder() {
       });
     } else if (stepId === 4) { // Moisturizer
       matchedProduct = shopifyProducts.find(p => {
+        if (!isSkincareProduct(p) || isSpecializedTreatment(p)) return false;
         const name = (p.title || p.name_en || "").toLowerCase();
         const cat = (p.productType || p.category || "").toLowerCase();
         const tags = (p.tags || []).map((t: string) => t.toLowerCase());
@@ -130,6 +151,7 @@ export default function RoutineBuilder() {
       });
     } else if (stepId === 5) { // Sunscreen
       matchedProduct = shopifyProducts.find(p => {
+        if (!isSkincareProduct(p)) return false;
         const name = (p.title || p.name_en || "").toLowerCase();
         const cat = (p.productType || p.category || "").toLowerCase();
         const tags = (p.tags || []).map((t: string) => t.toLowerCase());
@@ -154,7 +176,26 @@ export default function RoutineBuilder() {
   const getAvailableProductsForStep = (stepId: number) => {
     if (shopifyProducts.length === 0) return [];
 
+    const isSkincareProduct = (p: any) => {
+      const name = (p.title || p.name_en || "").toLowerCase();
+      const cat = (p.productType || p.category || "").toLowerCase();
+      const nameAr = (p.name_ar || "").toLowerCase();
+      
+      const isHair = cat.includes("hair") || name.includes("hair") || nameAr.includes("شعر") || cat.includes("shampoo") || name.includes("shampoo");
+      const isBody = cat.includes("body") || name.includes("body") || nameAr.includes("جسم") || nameAr.includes("شاور");
+      
+      return !isHair && !isBody;
+    };
+
+    const isSpecializedTreatment = (p: any) => {
+      const name = (p.title || p.name_en || "").toLowerCase();
+      const nameAr = (p.name_ar || "").toLowerCase();
+      return name.includes("booster") || name.includes("retinal") || name.includes("retinol") || nameAr.includes("تجاعيد") || nameAr.includes("ريتينول") || nameAr.includes("ريتينال") || nameAr.includes("بوستر") || name.includes("anti-wrinkle") || name.includes("anti-aging");
+    };
+
     return shopifyProducts.filter(p => {
+      if (!isSkincareProduct(p)) return false;
+
       const name = (p.title || p.name_en || "").toLowerCase();
       const cat = (p.productType || p.category || "").toLowerCase();
       const tags = (p.tags || []).map((t: string) => t.toLowerCase());
@@ -169,6 +210,7 @@ export default function RoutineBuilder() {
         return cat.includes("serum") || cat.includes("ampoule") || cat.includes("essence") || name.includes("serum") || name.includes("ampoule") || name.includes("essence") || tags.includes("serum") || tags.includes("essence");
       }
       if (stepId === 4) {
+        if (isSpecializedTreatment(p)) return false;
         return cat.includes("cream") || cat.includes("moistur") || name.includes("cream") || name.includes("moistur") || tags.includes("cream") || tags.includes("moisturizer") || cat.includes("lotion") || name.includes("lotion");
       }
       if (stepId === 5) {
