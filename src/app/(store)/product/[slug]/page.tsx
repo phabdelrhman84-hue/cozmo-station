@@ -29,7 +29,7 @@ export default function ProductDetailPage() {
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
-  const [activeTab, setActiveTab] = useState<"description" | "ingredients">(
+  const [activeTab, setActiveTab] = useState<"description" | "ingredients" | "usage" | "advice">(
     "description"
   );
   const [added, setAdded] = useState(false);
@@ -105,8 +105,6 @@ export default function ProductDetailPage() {
 
   const name = locale === "ar" ? product.name_ar : product.name_en;
   const description = product.descriptionHtml || product.description || "لا يوجد وصف بعد";
-  const ingredients =
-    locale === "ar" ? product.ingredients_ar : product.ingredients_en;
   const discount = product.compare_price_egp
     ? getDiscountPercentage(product.price_egp, product.compare_price_egp)
     : 0;
@@ -322,35 +320,46 @@ export default function ProductDetailPage() {
               ))}
             </div>
 
-            {/* Tabs: Description / Ingredients */}
+            {/* Tabs: Description / Ingredients / Usage / Advice */}
             <div className="border-t border-beige-dark pt-6">
-              <div className="flex gap-4 mb-4">
-                <button
-                  onClick={() => setActiveTab("description")}
-                  className={`pb-2 font-semibold transition-colors border-b-2 ${
-                    activeTab === "description"
-                      ? "text-pink-dark border-pink"
-                      : "text-warm-gray border-transparent hover:text-charcoal"
-                  }`}
-                >
-                  {t("products.description")}
-                </button>
-                <button
-                  onClick={() => setActiveTab("ingredients")}
-                  className={`pb-2 font-semibold transition-colors border-b-2 ${
-                    activeTab === "ingredients"
-                      ? "text-pink-dark border-pink"
-                      : "text-warm-gray border-transparent hover:text-charcoal"
-                  }`}
-                >
-                  {t("products.ingredients")}
-                </button>
+              <div className="flex gap-4 mb-4 border-b border-beige-dark overflow-x-auto whitespace-nowrap scrollbar-none">
+                {[
+                  { id: "description", label_ar: "الوصف", label_en: "Description" },
+                  { id: "ingredients", label_ar: "المكونات", label_en: "Ingredients" },
+                  { id: "usage", label_ar: "طريقة الاستخدام", label_en: "How to Use" },
+                  { id: "advice", label_ar: "نصيحة كوزمو ستيشن", label_en: "Cozmo Advice" },
+                ].map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id as any)}
+                    className={`pb-2 font-semibold transition-colors border-b-2 -mb-[2px] ${
+                      activeTab === tab.id
+                        ? "text-pink-dark border-pink"
+                        : "text-warm-gray border-transparent hover:text-charcoal"
+                    }`}
+                  >
+                    {locale === "ar" ? tab.label_ar : tab.label_en}
+                  </button>
+                ))}
               </div>
               <div className="text-warm-gray leading-relaxed">
-                {activeTab === "description" ? (
+                {activeTab === "description" && (
                   <div dangerouslySetInnerHTML={{ __html: description }} />
-                ) : (
-                  ingredients || (locale === "ar" ? "لا توجد مكونات مدرجة." : "No ingredients listed.")
+                )}
+                {activeTab === "ingredients" && (
+                  <div dangerouslySetInnerHTML={{ 
+                    __html: product.ingredients || product.ingredients_ar || product.ingredients_en || (locale === "ar" ? "لا توجد مكونات مدرجة." : "No ingredients listed.") 
+                  }} />
+                )}
+                {activeTab === "usage" && (
+                  <div dangerouslySetInnerHTML={{ 
+                    __html: product.usage || (locale === "ar" ? "لا توجد طريقة استخدام مدرجة." : "No usage instructions listed.") 
+                  }} />
+                )}
+                {activeTab === "advice" && (
+                  <div dangerouslySetInnerHTML={{ 
+                    __html: product.advice || (locale === "ar" ? "لا توجد نصائح مدرجة." : "No advice listed.") 
+                  }} />
                 )}
               </div>
             </div>

@@ -8,6 +8,9 @@ export interface Product {
   description_en: string | null;
   descriptionHtml?: string;
   description?: string;
+  ingredients?: string;
+  usage?: string;
+  advice?: string;
   ingredients_ar: string | null;
   ingredients_en: string | null;
   category: string;

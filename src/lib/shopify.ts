@@ -148,6 +148,59 @@ function getMetafield(
   return field?.value ?? null;
 }
 
+export function shopifyRichTextToHtml(value: string | null): string {
+  if (!value) return "";
+  try {
+    const parsed = JSON.parse(value);
+    
+    const renderNode = (node: any): string => {
+      if (!node) return "";
+      
+      switch (node.type) {
+        case "root":
+          return node.children ? node.children.map(renderNode).join("") : "";
+          
+        case "paragraph":
+          return `<p>${node.children ? node.children.map(renderNode).join("") : ""}</p>`;
+          
+        case "heading":
+          const level = node.level || 1;
+          return `<h${level}>${node.children ? node.children.map(renderNode).join("") : ""}</h${level}>`;
+          
+        case "list":
+          const tag = node.listType === "ordered" ? "ol" : "ul";
+          return `<${tag}>${node.children ? node.children.map(renderNode).join("") : ""}</${tag}>`;
+          
+        case "list-item":
+          return `<li>${node.children ? node.children.map(renderNode).join("") : ""}</li>`;
+          
+        case "text":
+          let text = node.value || "";
+          if (node.bold) text = `<strong>${text}</strong>`;
+          if (node.italic) text = `<em>${text}</em>`;
+          if (node.underline) text = `<u>${text}</u>`;
+          return text;
+          
+        case "link":
+          return `<a href="${node.url || "#"}" target="_blank" rel="noopener noreferrer">${node.children ? node.children.map(renderNode).join("") : ""}</a>`;
+          
+        default:
+          if (node.children) {
+            return node.children.map(renderNode).join("");
+          }
+          return node.value || "";
+      }
+    };
+    
+    if (parsed && typeof parsed === "object" && (parsed.type === "root" || parsed.type)) {
+      return renderNode(parsed);
+    }
+  } catch (e) {
+    // ignore
+  }
+  return value;
+}
+
 export function normalizeProduct(shopifyProduct: ShopifyProduct): Product {
   const firstVariant = shopifyProduct.variants.edges[0]?.node;
   const firstImage = shopifyProduct.images.edges[0]?.node;
@@ -183,6 +236,9 @@ export function normalizeProduct(shopifyProduct: ShopifyProduct): Product {
     description_en: shopifyProduct.descriptionHtml,
     descriptionHtml: shopifyProduct.descriptionHtml,
     description: shopifyProduct.description,
+    ingredients: shopifyRichTextToHtml(getMetafield(shopifyProduct.metafields, "ingredients")),
+    usage: shopifyRichTextToHtml(getMetafield(shopifyProduct.metafields, "usage")),
+    advice: shopifyRichTextToHtml(getMetafield(shopifyProduct.metafields, "advice")),
     ingredients_ar: getMetafield(shopifyProduct.metafields, "ingredients_ar"),
     ingredients_en: getMetafield(shopifyProduct.metafields, "ingredients_en"),
 
@@ -261,6 +317,9 @@ const PRODUCT_FRAGMENT = `
       { namespace: "cozmo", key: "description_ar" }
       { namespace: "cozmo", key: "ingredients_ar" }
       { namespace: "cozmo", key: "ingredients_en" }
+      { namespace: "custom", key: "ingredients" }
+      { namespace: "custom", key: "usage" }
+      { namespace: "custom", key: "advice" }
     ]) {
       key
       value
