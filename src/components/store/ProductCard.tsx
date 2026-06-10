@@ -35,8 +35,8 @@ export default function ProductCard({ product }: ProductCardProps) {
   const trendBadge = product.is_new
     ? (locale === "ar" ? "🔥 وصل حديثاً" : "🔥 New Arrival")
     : product.is_featured
-    ? (locale === "ar" ? "⭐ الأكثر مبيعاً" : "⭐ Best Seller")
-    : null;
+      ? (locale === "ar" ? "⭐ الأكثر مبيعاً" : "⭐ Best Seller")
+      : null;
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -121,13 +121,12 @@ export default function ProductCard({ product }: ProductCardProps) {
             onClick={handleAddToCart}
             disabled={isOutOfStock}
             aria-label={t("products.add_to_cart")}
-            className={`p-3 rounded-xl transition-all duration-200 flex items-center justify-center shadow-md active:scale-95 ${
-              added
+            className={`p-3 rounded-xl transition-all duration-200 flex items-center justify-center shadow-md active:scale-95 ${added
                 ? "bg-sage text-white"
                 : isOutOfStock
-                ? "bg-beige-dark text-warm-gray cursor-not-allowed"
-                : "bg-charcoal text-white hover:bg-pink-dark hover:shadow-pink/30 hover:shadow-lg"
-            }`}
+                  ? "bg-beige-dark text-warm-gray cursor-not-allowed"
+                  : "bg-charcoal text-white hover:bg-pink-dark hover:shadow-pink/30 hover:shadow-lg"
+              }`}
           >
             {added ? (
               <Check strokeWidth={2.5} size={20} />

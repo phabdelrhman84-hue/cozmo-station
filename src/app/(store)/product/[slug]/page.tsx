@@ -104,8 +104,7 @@ export default function ProductDetailPage() {
   }
 
   const name = locale === "ar" ? product.name_ar : product.name_en;
-  const description =
-    locale === "ar" ? product.description_ar : product.description_en;
+  const description = product.descriptionHtml || product.description || "لا يوجد وصف بعد";
   const ingredients =
     locale === "ar" ? product.ingredients_ar : product.ingredients_en;
   const discount = product.compare_price_egp
@@ -349,11 +348,7 @@ export default function ProductDetailPage() {
               </div>
               <div className="text-warm-gray leading-relaxed">
                 {activeTab === "description" ? (
-                  description ? (
-                    <div dangerouslySetInnerHTML={{ __html: description }} />
-                  ) : (
-                    <p>{locale === "ar" ? "لا يوجد وصف بعد." : "No description available."}</p>
-                  )
+                  <div dangerouslySetInnerHTML={{ __html: description }} />
                 ) : (
                   ingredients || (locale === "ar" ? "لا توجد مكونات مدرجة." : "No ingredients listed.")
                 )}

@@ -6,6 +6,8 @@ export interface Product {
   compare_price_egp: number | null;
   description_ar: string | null;
   description_en: string | null;
+  descriptionHtml?: string;
+  description?: string;
   ingredients_ar: string | null;
   ingredients_en: string | null;
   category: string;

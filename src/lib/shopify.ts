@@ -57,6 +57,7 @@ export interface ShopifyProduct {
   id: string;
   title: string;
   handle: string;
+  description: string;
   descriptionHtml: string;
   vendor: string;
   productType: string;
@@ -178,8 +179,10 @@ export function normalizeProduct(shopifyProduct: ShopifyProduct): Product {
     compare_price_egp: compareAtPriceEGP,
 
     // الوصف والمكونات
-    description_ar: getMetafield(shopifyProduct.metafields, "description_ar"),
+    description_ar: getMetafield(shopifyProduct.metafields, "description_ar") || shopifyProduct.descriptionHtml,
     description_en: shopifyProduct.descriptionHtml,
+    descriptionHtml: shopifyProduct.descriptionHtml,
+    description: shopifyProduct.description,
     ingredients_ar: getMetafield(shopifyProduct.metafields, "ingredients_ar"),
     ingredients_en: getMetafield(shopifyProduct.metafields, "ingredients_en"),
 
@@ -227,6 +230,7 @@ const PRODUCT_FRAGMENT = `
     id
     title
     handle
+    description
     descriptionHtml
     vendor
     productType
