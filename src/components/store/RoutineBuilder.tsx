@@ -11,6 +11,8 @@ export default function RoutineBuilder() {
   const [added, setAdded] = useState(false);
   const [shopifyProducts, setShopifyProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [customSelections, setCustomSelections] = useState<Record<number, any>>({});
+  const [activeSwapStep, setActiveSwapStep] = useState<number | null>(null);
   
   interface RoutineStep {
     id: number;
@@ -83,6 +85,17 @@ export default function RoutineBuilder() {
 
   const getProductForStep = (stepId: number) => {
     const defaultStep = steps.find(s => s.id === stepId)!;
+
+    if (customSelections[stepId]) {
+      const selectedProd = customSelections[stepId];
+      return {
+        ...defaultStep,
+        product: locale === "ar" ? (selectedProd.name_ar || selectedProd.title) : selectedProd.title,
+        price: selectedProd.price_egp || selectedProd.price,
+        rawProduct: selectedProd
+      };
+    }
+
     if (shopifyProducts.length === 0) return defaultStep;
 
     let matchedProduct: any = null;
@@ -137,6 +150,33 @@ export default function RoutineBuilder() {
   };
 
   const dynamicSteps = steps.map(step => getProductForStep(step.id));
+
+  const getAvailableProductsForStep = (stepId: number) => {
+    if (shopifyProducts.length === 0) return [];
+
+    return shopifyProducts.filter(p => {
+      const name = (p.title || p.name_en || "").toLowerCase();
+      const cat = (p.productType || p.category || "").toLowerCase();
+      const tags = (p.tags || []).map((t: string) => t.toLowerCase());
+
+      if (stepId === 1) {
+        return cat.includes("cleanser") || cat.includes("cleanse") || name.includes("cleanser") || name.includes("cleanse") || tags.includes("cleanser") || tags.includes("cleaner") || name.includes("foam") || name.includes("soap");
+      }
+      if (stepId === 2) {
+        return cat.includes("toner") || name.includes("toner") || tags.includes("toner") || name.includes("essence toner");
+      }
+      if (stepId === 3) {
+        return cat.includes("serum") || cat.includes("ampoule") || cat.includes("essence") || name.includes("serum") || name.includes("ampoule") || name.includes("essence") || tags.includes("serum") || tags.includes("essence");
+      }
+      if (stepId === 4) {
+        return cat.includes("cream") || cat.includes("moistur") || name.includes("cream") || name.includes("moistur") || tags.includes("cream") || tags.includes("moisturizer") || cat.includes("lotion") || name.includes("lotion");
+      }
+      if (stepId === 5) {
+        return cat.includes("sun") || cat.includes("spf") || name.includes("sun") || name.includes("spf") || tags.includes("sunscreen") || tags.includes("sunblock");
+      }
+      return false;
+    });
+  };
 
   const [selectedSteps, setSelectedSteps] = useState<number[]>([1, 2, 3]);
 
@@ -239,6 +279,19 @@ export default function RoutineBuilder() {
                     {step.product}
                   </div>
 
+                  {shopifyProducts.length > 0 && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveSwapStep(step.id);
+                      }}
+                      className="text-[10px] text-pink border border-pink/30 hover:border-pink hover:bg-pink/10 transition-all px-3 py-1 rounded-full mx-auto mb-2 flex items-center gap-1 z-30"
+                    >
+                      <span>🔄</span>
+                      <span>{locale === "ar" ? "تغيير المنتج" : "Change"}</span>
+                    </button>
+                  )}
+
                   <div className="text-pink font-bold text-sm">
                     {step.price} {locale === "ar" ? "ج.م" : "EGP"}
                   </div>
@@ -282,6 +335,85 @@ export default function RoutineBuilder() {
           </button>
         </div>
       </div>
+
+      {/* Swap Product Modal */}
+      {activeSwapStep !== null && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-charcoal border border-white/10 rounded-3xl max-w-xl w-full max-h-[80vh] flex flex-col shadow-2xl overflow-hidden animate-scale-in">
+            {/* Header */}
+            <div className="p-6 border-b border-white/10 flex justify-between items-center bg-white/5">
+              <h3 className="text-xl font-bold text-white">
+                {locale === "ar" 
+                  ? `اختر منتج ${steps.find(s => s.id === activeSwapStep)?.name_ar}` 
+                  : `Select ${steps.find(s => s.id === activeSwapStep)?.name_en}`}
+              </h3>
+              <button 
+                onClick={() => setActiveSwapStep(null)}
+                className="text-white/60 hover:text-white text-lg font-bold w-8 h-8 rounded-full bg-white/10 flex items-center justify-center transition-colors"
+                type="button"
+              >
+                ✕
+              </button>
+            </div>
+            
+            {/* List */}
+            <div className="p-6 overflow-y-auto space-y-4 flex-1">
+              {getAvailableProductsForStep(activeSwapStep).length > 0 ? (
+                getAvailableProductsForStep(activeSwapStep).map((prod) => {
+                  const currentSelected = getProductForStep(activeSwapStep);
+                  const isCurrent = currentSelected.rawProduct?.id === prod.id;
+                  
+                  return (
+                    <div 
+                      key={prod.id}
+                      onClick={() => {
+                        setCustomSelections(prev => ({
+                          ...prev,
+                          [activeSwapStep]: prod
+                        }));
+                        setActiveSwapStep(null);
+                      }}
+                      className={`flex items-center gap-4 p-3 rounded-2xl border transition-all cursor-pointer ${
+                        isCurrent 
+                          ? "bg-pink/10 border-pink shadow-md" 
+                          : "bg-white/5 border-white/10 hover:bg-white/10"
+                      }`}
+                    >
+                      <img 
+                        src={prod.main_image || "/placeholder.png"} 
+                        alt={locale === "ar" ? prod.name_ar : prod.name_en} 
+                        className="w-16 h-16 rounded-xl object-cover bg-white"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-sm text-white truncate">
+                          {locale === "ar" ? (prod.name_ar || prod.title) : prod.title}
+                        </h4>
+                        <p className="text-xs text-white/60 mt-1">
+                          {prod.brand}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-pink font-bold text-sm block">
+                          {prod.price_egp || prod.price} {locale === "ar" ? "ج.م" : "EGP"}
+                        </span>
+                        {isCurrent && (
+                          <span className="text-[10px] text-sage font-medium mt-1 inline-block bg-sage/10 px-2 py-0.5 rounded-full">
+                            {locale === "ar" ? "محدد" : "Selected"}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="text-center py-8 text-white/50">
+                  {locale === "ar" ? "لا توجد منتجات متوفرة حالياً في هذا القسم." : "No products available in this category currently."}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
