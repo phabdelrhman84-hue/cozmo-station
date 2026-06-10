@@ -204,24 +204,44 @@ export default function RoutineBuilder() {
               <div
                 key={step.id}
                 onClick={() => toggleStep(step.id)}
-                className={`relative bg-white/5 border rounded-2xl p-6 text-center transition-all cursor-pointer hover:-translate-y-1 ${
+                className={`relative bg-white/5 border rounded-2xl p-5 text-center transition-all cursor-pointer hover:-translate-y-1 overflow-hidden min-h-[240px] flex flex-col justify-between group ${
                   isSelected
                     ? "bg-pink/10 border-pink/50 shadow-[0_0_15px_rgba(242,196,206,0.2)]"
                     : "border-white/10 hover:bg-white/10"
                 }`}
               >
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-pink text-white w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shadow-lg">
+                {/* Background Image with Overlay */}
+                {step.rawProduct?.main_image && (
+                  <>
+                    <div 
+                      className="absolute inset-0 bg-cover bg-center transition-transform duration-500 scale-100 group-hover:scale-110"
+                      style={{ backgroundImage: `url(${step.rawProduct.main_image})` }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/85 via-black/75 to-black/90 transition-opacity duration-300" />
+                  </>
+                )}
+
+                {/* Step ID Badge */}
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-pink text-white w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shadow-lg z-20">
                   {step.id}
                 </div>
-                <span className="text-4xl block mb-3">{step.emoji}</span>
-                <div className="text-sm font-semibold mb-1">
-                  {locale === "ar" ? step.name_ar : step.name_en}
-                </div>
-                <div className="text-xs text-white/60 leading-relaxed mb-3 h-8 flex items-center justify-center">
-                  {step.product}
-                </div>
-                <div className="text-pink font-bold text-sm">
-                  {step.price} {locale === "ar" ? "ج.م" : "EGP"}
+
+                {/* Content wrapper with relative positioning so it sits on top of background */}
+                <div className="relative z-10 flex flex-col justify-between h-full w-full">
+                  <div className="mt-1">
+                    <span className="text-3xl block mb-2">{step.emoji}</span>
+                    <div className="text-sm font-semibold mb-1 text-pink-light">
+                      {locale === "ar" ? step.name_ar : step.name_en}
+                    </div>
+                  </div>
+
+                  <div className="text-xs text-white/80 leading-relaxed my-2 min-h-[4.5rem] flex items-center justify-center px-1 overflow-hidden text-ellipsis line-clamp-3">
+                    {step.product}
+                  </div>
+
+                  <div className="text-pink font-bold text-sm">
+                    {step.price} {locale === "ar" ? "ج.م" : "EGP"}
+                  </div>
                 </div>
               </div>
             );
