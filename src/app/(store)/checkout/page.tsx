@@ -25,9 +25,9 @@ const steps = [
 
 export default function CheckoutPage() {
   const { locale, t } = useLanguage();
-  const { items, subtotal, clearCart } = useCart();
+  const { items, subtotal } = useCart();
   const [currentStep, setCurrentStep] = useState(1);
-  const [orderPlaced, setOrderPlaced] = useState(false);
+  const [orderPlaced] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [selectedZone, setSelectedZone] = useState<string>("");
@@ -81,11 +81,12 @@ export default function CheckoutPage() {
 
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.error || "Checkout failed");
-      
-      setOrderPlaced(true);
-      clearCart();
-    } catch (err: any) {
-      setError(err.message);
+      if (!data.checkoutUrl) throw new Error("Missing checkout URL");
+
+      // وجّه العميل لصفحة الدفع الفعلية في شوبيفاي
+      window.location.href = data.checkoutUrl;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Checkout failed");
     } finally {
       setIsSubmitting(false);
     }

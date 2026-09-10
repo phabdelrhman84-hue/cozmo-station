@@ -1,73 +1,117 @@
 import { NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase";
+
+/**
+ * POST /api/checkout
+ * ==================
+ * ينشئ Shopify Cart عبر Storefront API (cartCreate) ويرجّع checkoutUrl
+ * عشان العميل يكمّل الدفع على صفحة شوبيفاي الفعلية.
+ *
+ * ملاحظات:
+ *   - كل عنصر في items[] بياخد merchandiseId من item.product.sku
+ *     (بيحمل الـ Shopify Variant GID أصلاً — شوف src/lib/shopify.ts).
+ *   - مفيش أي كتابة في Supabase هنا؛ الأوردر الفعلي بيتسجّل في شوبيفاي بعد الدفع.
+ */
+
+const SHOPIFY_API_VERSION = "2024-01";
+
+interface CheckoutItem {
+  product?: { sku?: string; name_en?: string };
+  quantity?: number;
+}
+
+const CART_CREATE_MUTATION = `
+  mutation CartCreate($input: CartInput!) {
+    cartCreate(input: $input) {
+      cart {
+        id
+        checkoutUrl
+      }
+      userErrors {
+        field
+        message
+      }
+    }
+  }
+`;
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { items, customer, shipping, payment, total } = body;
+    const { items } = body;
 
-    // 1. Create or get customer
-    let customerId;
-    const { data: existingCustomer } = await supabaseAdmin
-      .from("customers")
-      .select("id")
-      .eq("email", customer.email)
-      .single();
-
-    if (existingCustomer) {
-      customerId = existingCustomer.id;
-      // Update customer total spent
-      await supabaseAdmin.rpc("increment_customer_spent", {
-        c_id: customerId,
-        amount: total,
-      });
-    } else {
-      const { data: newCustomer, error: customerError } = await supabaseAdmin
-        .from("customers")
-        .insert({
-          name: customer.name,
-          email: customer.email,
-          phone: customer.phone,
-          total_spent: total,
-          orders_count: 1,
-        })
-        .select()
-        .single();
-
-      if (customerError) throw customerError;
-      customerId = newCustomer.id;
+    if (!Array.isArray(items) || items.length === 0) {
+      return NextResponse.json(
+        { success: false, error: "Cart is empty" },
+        { status: 400 }
+      );
     }
 
-    // 2. Create Order
-    const orderId = `CZ-${Math.floor(10000 + Math.random() * 90000)}`;
-    const { data: order, error: orderError } = await supabaseAdmin
-      .from("orders")
-      .insert({
-        id: orderId,
-        customer_id: customerId,
-        status: "pending",
-        total_amount: total,
-        payment_method: payment.method,
-        shipping_address: shipping,
-        items: items, // Stored as JSONB
-      })
-      .select()
-      .single();
+    const domain = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN;
+    const storefrontAccessToken =
+      process.env.NEXT_PUBLIC_SHOPIFY_STOREFRONT_ACCESS_TOKEN;
 
-    if (orderError) throw orderError;
-
-    // 3. Update Product Stock
-    for (const item of items) {
-      await supabaseAdmin.rpc("decrement_stock", {
-        p_id: item.product.id,
-        qty: item.quantity,
-      });
+    if (!domain || !storefrontAccessToken) {
+      return NextResponse.json(
+        { success: false, error: "Shopify store is not configured" },
+        { status: 500 }
+      );
     }
 
-    // 4. Send Telegram Notification
+    // 1. تحويل عناصر السلة إلى lines بصيغة Shopify
+    const lines = (items as CheckoutItem[]).map((item) => {
+      const merchandiseId = item?.product?.sku;
+      if (!merchandiseId || !String(merchandiseId).startsWith("gid://")) {
+        throw new Error(
+          `Missing Shopify variant id for product "${item?.product?.name_en ?? "unknown"}"`
+        );
+      }
+      return {
+        merchandiseId,
+        quantity: item.quantity ?? 1,
+      };
+    });
+
+    // 2. cartCreate mutation
+    const endpoint = `https://${domain}/api/${SHOPIFY_API_VERSION}/graphql.json`;
+    const shopifyRes = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Shopify-Storefront-Access-Token": storefrontAccessToken,
+      },
+      body: JSON.stringify({
+        query: CART_CREATE_MUTATION,
+        variables: { input: { lines } },
+      }),
+      cache: "no-store",
+    });
+
+    const json = (await shopifyRes.json()) as {
+      data?: {
+        cartCreate?: {
+          cart?: { id: string; checkoutUrl: string } | null;
+          userErrors?: { field: string[]; message: string }[];
+        };
+      };
+      errors?: { message: string }[];
+    };
+
+    if (json.errors?.length) {
+      throw new Error(json.errors[0].message);
+    }
+
+    const userErrors = json.data?.cartCreate?.userErrors;
+    if (userErrors?.length) {
+      throw new Error(userErrors[0].message);
+    }
+
+    const cart = json.data?.cartCreate?.cart;
+    if (!cart?.checkoutUrl) {
+      throw new Error("Shopify did not return a checkout URL");
+    }
+
+    // 3. إشعار Telegram (اختياري) — مبسّط
     if (process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHAT_ID) {
-      const message = `🛍️ *New Order: ${orderId}*\n\n👤 *Customer:* ${customer.name}\n💰 *Total:* ${total} EGP\n💳 *Payment:* ${payment.method}\n📍 *Location:* ${shipping.city}, ${shipping.governorate}\n\n📦 *Items:*\n${items.map((i: any) => `- ${i.quantity}x ${i.product.name_en}`).join("\n")}`;
-      
       await fetch(
         `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`,
         {
@@ -75,19 +119,20 @@ export async function POST(req: Request) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             chat_id: process.env.TELEGRAM_CHAT_ID,
-            text: message,
-            parse_mode: "Markdown",
+            text: "🛒 تم إنشاء كارت جديد",
           }),
         }
-      ).catch(e => console.error("Telegram error:", e));
+      ).catch((e) => console.error("Telegram error:", e));
     }
 
-    return NextResponse.json({ success: true, orderId });
-  } catch (error: any) {
+    return NextResponse.json({
+      success: true,
+      cartId: cart.id,
+      checkoutUrl: cart.checkoutUrl,
+    });
+  } catch (error) {
     console.error("Checkout Error:", error);
-    return NextResponse.json(
-      { success: false, error: error.message },
-      { status: 500 }
-    );
+    const message = error instanceof Error ? error.message : "Checkout failed";
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }
