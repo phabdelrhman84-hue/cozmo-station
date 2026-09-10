@@ -8,6 +8,7 @@ import { useCart } from "@/hooks/useCart";
 import ProductCard from "@/components/store/ProductCard";
 import { getDiscountPercentage } from "@/lib/utils";
 import { getProduct, getShopifyProducts } from "@/lib/shopify";
+import { trackViewItem, productToItem } from "@/lib/analytics";
 import {
   ShoppingBag,
   Check,
@@ -46,6 +47,7 @@ export default function ProductDetailPage() {
 
         if (shopifyProduct) {
           setProduct(shopifyProduct);
+          trackViewItem(productToItem(shopifyProduct, 1));
 
           // Fetch related products from Shopify (same category, exclude current)
           try {

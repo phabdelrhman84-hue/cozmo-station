@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useCart } from "@/hooks/useCart";
 import { shippingZones } from "@/lib/data";
+import { trackBeginCheckout } from "@/lib/analytics";
 import {
   User,
   MapPin,
@@ -57,6 +58,7 @@ export default function CheckoutPage() {
   const handlePlaceOrder = async () => {
     setIsSubmitting(true);
     setError("");
+    trackBeginCheckout(items);
     try {
       const res = await fetch("/api/checkout", {
         method: "POST",

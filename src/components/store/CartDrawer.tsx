@@ -5,6 +5,7 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { useCart } from "@/hooks/useCart";
 import { X, Plus, Minus, Trash2, ShoppingBag } from "lucide-react";
 import Link from "next/link";
+import { trackBeginCheckout } from "@/lib/analytics";
 
 export default function CartDrawer() {
   const { locale, t } = useLanguage();
@@ -29,6 +30,7 @@ export default function CartDrawer() {
   const handleCheckout = async () => {
     setIsCheckingOut(true);
     setCheckoutError("");
+    trackBeginCheckout(items);
     try {
       const res = await fetch("/api/checkout", {
         method: "POST",
