@@ -8,9 +8,8 @@ import ReviewsSection from "@/components/store/ReviewsSection";
 import FreeShippingBar from "@/components/store/FreeShippingBar";
 import CategoriesSection from "@/components/store/CategoriesSection";
 import HeroBanner from "@/components/store/HeroBanner";
-import { demoProducts } from "@/lib/data";
-import { getShopifyProducts } from "@/lib/shopify";
-import { useState, useEffect } from "react";
+import RecentlyViewed from "@/components/store/RecentlyViewed";
+import { useProducts } from "@/hooks/useProducts";
 import {
   Truck,
   Shield,
@@ -21,43 +20,23 @@ import {
 } from "lucide-react";
 
 export default function HomePage() {
-  const { locale, t } = useLanguage();
+  const { locale } = useLanguage();
   const Arrow = locale === "ar" ? ArrowLeft : ArrowRight;
 
-  const [themeSections, setThemeSections] = useState<any[]>([]);
-  const [products, setProducts] = useState<any[]>(demoProducts);
-  const [isLoading, setIsLoading] = useState(true);
-  const [noShopifyProducts, setNoShopifyProducts] = useState(false);
-
-  useEffect(() => {
-    async function fetchData() {
-      setIsLoading(true);
-
-      // ── Products: Shopify → demoProducts fallback ──────────────────
-      try {
-        const shopifyProducts = await getShopifyProducts(12);
-        console.log("Shopify Data:", shopifyProducts);
-        if (!shopifyProducts || shopifyProducts.length === 0) {
-          setNoShopifyProducts(true);
-        } else {
-          setProducts(shopifyProducts);
-          setNoShopifyProducts(false);
-        }
-      } catch (err) {
-        console.log("Shopify fetch error:", err);
-        setNoShopifyProducts(true);
-      }
-      // If Shopify returned nothing, demoProducts (initial state) remain
-
-      setIsLoading(false);
-    }
-    fetchData();
-  }, []);
+  const { products, loading: isLoading, usingFallback: noShopifyProducts } =
+    useProducts();
 
   const featuredProducts = products.filter((p) => p.is_featured);
   const newArrivals = products.filter((p) => p.is_new);
 
-  const getSection = (type: string) => themeSections.find(s => s.type === type);
+  // إعدادات أقسام الثيم (لسه غير مفعّلة) — كلها تظهر افتراضياً
+  const themeSections: {
+    type: string;
+    is_visible: boolean;
+    content: Record<string, string>;
+  }[] = [];
+  const getSection = (type: string) =>
+    themeSections.find((s) => s.type === type);
   const heroSection = getSection('hero');
   const featuredSection = getSection('featured_products');
   const bannerSection = getSection('banner');
@@ -224,6 +203,9 @@ export default function HomePage() {
           )}
         </div>
       </section>
+
+      {/* ===== RECENTLY VIEWED ===== */}
+      <RecentlyViewed className="py-16 bg-white" />
 
       {/* ===== REVIEWS ===== */}
       <ReviewsSection />

@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useMemo, Suspense, useEffect } from "react";
+import { useState, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLanguage } from "@/hooks/useLanguage";
 import ProductCard from "@/components/store/ProductCard";
-import { demoProducts } from "@/lib/data";
-import { getShopifyProducts } from "@/lib/shopify";
+import { useProducts } from "@/hooks/useProducts";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 
 function ProductsPageContent() {
@@ -19,27 +18,9 @@ function ProductsPageContent() {
   const [sortBy, setSortBy] = useState("newest");
   const [showFilters, setShowFilters] = useState(false);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 5000]);
-  const [allProducts, setAllProducts] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchProducts() {
-      setIsLoading(true);
-      try {
-        const shopifyData = await getShopifyProducts(50);
-        if (shopifyData && shopifyData.length > 0) {
-          setAllProducts(shopifyData);
-        } else {
-          setAllProducts(demoProducts);
-        }
-      } catch (err) {
-        console.log("Shopify fetch error:", err);
-        setAllProducts(demoProducts);
-      }
-      setIsLoading(false);
-    }
-    fetchProducts();
-  }, []);
+  const { products, loading: isLoading } = useProducts();
+  // فلترة الكود القديم بتفحص حقول Shopify الخام + الموحّدة؛ نخليها any
+  const allProducts: any[] = products;
 
   const categories = [
     { id: "all", label: locale === "ar" ? "الكل" : "All" },

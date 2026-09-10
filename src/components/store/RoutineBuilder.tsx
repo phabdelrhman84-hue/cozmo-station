@@ -1,16 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useLanguage } from "@/hooks/useLanguage";
-import { getShopifyProducts } from "@/lib/shopify";
+import { useProducts } from "@/hooks/useProducts";
 import { useCart } from "@/hooks/useCart";
 
 export default function RoutineBuilder() {
   const { locale } = useLanguage();
   const { addItem } = useCart();
+  const { products } = useProducts();
+  // الكود القديم بيفحص حقول Shopify الخام + الحقول الموحّدة معاً؛ نخليه any
+  const shopifyProducts: any[] = products;
   const [added, setAdded] = useState(false);
-  const [shopifyProducts, setShopifyProducts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   const [customSelections, setCustomSelections] = useState<Record<number, any>>({});
   const [activeSwapStep, setActiveSwapStep] = useState<number | null>(null);
 
@@ -98,21 +99,6 @@ export default function RoutineBuilder() {
     },
   ];
 
-  useEffect(() => {
-    async function loadProducts() {
-      try {
-        const data = await getShopifyProducts(100);
-        if (data && data.length > 0) {
-          setShopifyProducts(data);
-        }
-      } catch (err) {
-        console.error("RoutineBuilder product load error:", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadProducts();
-  }, []);
 
   const getProductForStep = (stepId: number) => {
     const defaultStep = steps.find(s => s.id === stepId)!;

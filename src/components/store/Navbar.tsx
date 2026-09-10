@@ -4,22 +4,17 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useCart } from "@/hooks/useCart";
-import {
-  ShoppingBag,
-  Search,
-  Menu,
-  X,
-  Globe,
-  ChevronDown,
-} from "lucide-react";
+import { useWishlist } from "@/hooks/useWishlist";
+import SearchBox from "@/components/store/SearchBox";
+import { ShoppingBag, Search, Menu, X, Globe, Heart } from "lucide-react";
 
 export default function Navbar() {
   const { locale, setLocale, t } = useLanguage();
   const { totalItems, openCart } = useCart();
+  const { count: wishlistCount } = useWishlist();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -88,6 +83,20 @@ export default function Navbar() {
                 <Search size={20} className="text-charcoal" />
               </button>
 
+              {/* Wishlist */}
+              <Link
+                href="/wishlist"
+                className="relative p-2 rounded-full hover:bg-beige transition-colors"
+                aria-label={locale === "ar" ? "المفضلة" : "Wishlist"}
+              >
+                <Heart size={20} className="text-charcoal" />
+                {wishlistCount > 0 && (
+                  <span className="absolute -top-1 -end-1 w-5 h-5 bg-pink text-white text-xs font-bold rounded-full flex items-center justify-center animate-scale-in">
+                    {wishlistCount}
+                  </span>
+                )}
+              </Link>
+
               {/* Language Switcher */}
               <button
                 onClick={() => setLocale(locale === "ar" ? "en" : "ar")}
@@ -126,30 +135,17 @@ export default function Navbar() {
             </div>
           </div>
 
-          {/* Search Bar - Expandable */}
+          {/* Search Bar - Expandable (instant results) */}
           <div
-            className={`overflow-hidden transition-all duration-300 ${
-              searchOpen ? "max-h-20 mt-4 opacity-100" : "max-h-0 opacity-0"
+            className={`transition-all duration-300 ${
+              searchOpen
+                ? "max-h-96 mt-4 opacity-100"
+                : "max-h-0 mt-0 opacity-0 overflow-hidden pointer-events-none"
             }`}
           >
-            <div className="relative">
-              <Search
-                size={18}
-                className="absolute top-1/2 start-4 -translate-y-1/2 text-warm-gray-light"
-              />
-              <input
-                type="text"
-                placeholder={t("nav.search")}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && searchQuery.trim()) {
-                    window.location.href = `/products?search=${encodeURIComponent(searchQuery)}`;
-                  }
-                }}
-                className="w-full ps-12 pe-4 py-3 rounded-full bg-beige border border-beige-dark focus:border-pink focus:outline-none transition-colors text-charcoal placeholder:text-warm-gray-light"
-              />
-            </div>
+            {searchOpen && (
+              <SearchBox autoFocus onNavigate={() => setSearchOpen(false)} />
+            )}
           </div>
         </div>
 

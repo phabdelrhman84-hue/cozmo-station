@@ -6,6 +6,7 @@ import { useCart } from "@/hooks/useCart";
 import { X, Plus, Minus, Trash2, ShoppingBag } from "lucide-react";
 import Link from "next/link";
 import { trackBeginCheckout } from "@/lib/analytics";
+import CartUpsell from "@/components/store/CartUpsell";
 
 export default function CartDrawer() {
   const { locale, t } = useLanguage();
@@ -92,25 +93,47 @@ export default function CartDrawer() {
         {/* Free Shipping Progress */}
         {items.length > 0 && (
           <div className="px-5 py-3 bg-beige-light">
-            <div className="flex justify-between text-sm mb-1">
-              <span className="text-warm-gray">
-                {remaining > 0
-                  ? t("cart.free_shipping_remaining").replace(
-                      "{amount}",
-                      remaining.toLocaleString()
-                    )
-                  : "🎉 " +
-                    (locale === "ar"
-                      ? "مبروك! حصلت على شحن مجاني"
-                      : "Congrats! You got free shipping")}
-              </span>
-            </div>
-            <div className="h-2 bg-beige-dark rounded-full overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-pink to-sage rounded-full transition-all duration-500"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
+            {remaining > 0 ? (
+              <>
+                <div className="flex items-center gap-1.5 text-sm mb-1.5 text-charcoal">
+                  <span>🚚</span>
+                  <span>
+                    {locale === "ar" ? (
+                      <>
+                        باقي{" "}
+                        <strong className="text-pink-dark">
+                          {remaining.toLocaleString()} ج.م
+                        </strong>{" "}
+                        والتوصيل علينا
+                      </>
+                    ) : (
+                      <>
+                        You&apos;re{" "}
+                        <strong className="text-pink-dark">
+                          {remaining.toLocaleString()} EGP
+                        </strong>{" "}
+                        away from free shipping
+                      </>
+                    )}
+                  </span>
+                </div>
+                <div className="h-2 bg-beige-dark rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-pink to-sage rounded-full transition-all duration-700 ease-out"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+              </>
+            ) : (
+              <div className="flex items-center gap-1.5 text-sm font-semibold text-sage">
+                <span>🎉</span>
+                <span>
+                  {locale === "ar"
+                    ? "التوصيل مجاني! جاهزة للدفع"
+                    : "Free shipping unlocked! Ready to check out"}
+                </span>
+              </div>
+            )}
           </div>
         )}
 
@@ -207,6 +230,9 @@ export default function CartDrawer() {
             ))
           )}
         </div>
+
+        {/* Upsell rail */}
+        <CartUpsell />
 
         {/* Footer */}
         {items.length > 0 && (
