@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useCart } from "@/hooks/useCart";
 import { X, Plus, Minus, Trash2, ShoppingBag } from "lucide-react";
@@ -17,9 +18,35 @@ export default function CartDrawer() {
     closeCart,
   } = useCart();
 
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [checkoutError, setCheckoutError] = useState("");
+
   const freeShippingThreshold = 999;
   const remaining = Math.max(0, freeShippingThreshold - subtotal);
   const progress = Math.min(100, (subtotal / freeShippingThreshold) * 100);
+
+  // ينشئ Shopify Cart ويوجّه العميل لصفحة الدفع بتاعت شوبيفاي مباشرة
+  const handleCheckout = async () => {
+    setIsCheckingOut(true);
+    setCheckoutError("");
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success || !data.checkoutUrl) {
+        throw new Error(data.error || "Checkout failed");
+      }
+      window.location.href = data.checkoutUrl;
+    } catch (err) {
+      setCheckoutError(
+        err instanceof Error ? err.message : "Checkout failed"
+      );
+      setIsCheckingOut(false);
+    }
+  };
 
   return (
     <>
@@ -188,13 +215,20 @@ export default function CartDrawer() {
                 {subtotal.toLocaleString()} {locale === "ar" ? "ج.م" : "EGP"}
               </span>
             </div>
-            <Link
-              href="/checkout"
-              onClick={closeCart}
-              className="btn-primary block w-full text-center text-lg"
+            {checkoutError && (
+              <p className="text-error text-sm text-center">{checkoutError}</p>
+            )}
+            <button
+              onClick={handleCheckout}
+              disabled={isCheckingOut}
+              className="btn-primary flex items-center justify-center w-full text-center text-lg disabled:opacity-60"
             >
-              {t("cart.checkout")}
-            </Link>
+              {isCheckingOut ? (
+                <span className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                t("cart.checkout")
+              )}
+            </button>
              <Link
               href="/products"
               onClick={closeCart}
