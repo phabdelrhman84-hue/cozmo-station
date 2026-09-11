@@ -303,7 +303,10 @@ export default function RoutineBuilder() {
                     </div>
                   </div>
 
-                  <div className="text-xs text-white/80 leading-relaxed my-2 min-h-[4.5rem] flex items-center justify-center px-1 overflow-hidden text-ellipsis line-clamp-3">
+                  <div
+                    dir="auto"
+                    className="text-xs text-white/80 leading-relaxed my-2 min-h-[4.5rem] flex items-center justify-center px-1 overflow-hidden text-ellipsis line-clamp-3"
+                  >
                     {step.product}
                   </div>
 
@@ -413,7 +416,10 @@ export default function RoutineBuilder() {
                         className="w-16 h-16 rounded-xl object-cover bg-white"
                       />
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-semibold text-sm text-white truncate">
+                        <h4
+                          dir="auto"
+                          className="font-semibold text-sm text-white truncate"
+                        >
                           {locale === "ar" ? (prod.name_ar || prod.title) : prod.title}
                         </h4>
                         <p className="text-xs text-white/60 mt-1">

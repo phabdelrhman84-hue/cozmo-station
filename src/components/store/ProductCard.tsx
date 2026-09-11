@@ -103,7 +103,10 @@ export default function ProductCard({ product }: ProductCardProps) {
 
         {/* الاسم */}
         <Link href={`/product/${product.handle || product.slug}`} className="mb-3">
-          <h3 className="font-bold text-charcoal leading-snug line-clamp-2 group-hover:text-pink-dark transition-colors duration-200">
+          <h3
+            dir="auto"
+            className="font-bold text-charcoal leading-snug line-clamp-2 group-hover:text-pink-dark transition-colors duration-200"
+          >
             {name}
           </h3>
         </Link>

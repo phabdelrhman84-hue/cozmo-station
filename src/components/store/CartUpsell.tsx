@@ -50,7 +50,10 @@ export default function CartUpsell() {
                 className="w-full h-full object-cover"
               />
             </div>
-            <p className="text-[11px] font-medium text-charcoal line-clamp-2 leading-tight mb-1 min-h-[28px]">
+            <p
+              dir="auto"
+              className="text-[11px] font-medium text-charcoal line-clamp-2 leading-tight mb-1 min-h-[28px]"
+            >
               {locale === "ar" ? p.name_ar : p.name_en}
             </p>
             <div className="mt-auto flex items-center justify-between gap-1">

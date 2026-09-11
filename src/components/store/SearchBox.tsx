@@ -123,7 +123,10 @@ export default function SearchBox({
                         />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-charcoal truncate">
+                        <p
+                          dir="auto"
+                          className="text-sm font-medium text-charcoal truncate"
+                        >
                           {locale === "ar" ? p.name_ar : p.name_en}
                         </p>
                         <p className="text-xs text-warm-gray">{p.brand}</p>

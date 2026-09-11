@@ -93,7 +93,10 @@ export default function FrequentlyBoughtTogether({
         alt={locale === "ar" ? p.name_ar : p.name_en}
         className="w-12 h-12 rounded-lg object-cover bg-white shrink-0"
       />
-      <span className="flex-1 min-w-0 text-sm text-charcoal line-clamp-2 leading-tight">
+      <span
+        dir="auto"
+        className="flex-1 min-w-0 text-sm text-charcoal line-clamp-2 leading-tight"
+      >
         {isCurrent && (
           <span className="text-warm-gray">
             {locale === "ar" ? "هذا المنتج: " : "This item: "}

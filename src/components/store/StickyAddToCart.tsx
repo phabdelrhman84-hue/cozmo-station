@@ -43,7 +43,9 @@ export default function StickyAddToCart({
         />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-xs font-medium text-charcoal truncate">{name}</p>
+        <p dir="auto" className="text-xs font-medium text-charcoal truncate">
+          {name}
+        </p>
         <p className="text-sm font-bold text-pink-dark">
           {product.price_egp.toLocaleString()}{" "}
           {locale === "ar" ? "ج.م" : "EGP"}

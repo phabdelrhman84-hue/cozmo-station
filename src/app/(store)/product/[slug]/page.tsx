@@ -152,7 +152,10 @@ export default function ProductDetailPage() {
               {t("nav.products")}
             </Link>
             <span>/</span>
-            <span className="text-charcoal font-medium truncate max-w-[200px]">
+            <span
+              dir="auto"
+              className="text-charcoal font-medium truncate max-w-[200px]"
+            >
               {name}
             </span>
           </div>
@@ -216,7 +219,10 @@ export default function ProductDetailPage() {
               {product.brand}
             </p>
             <div className="flex items-start justify-between gap-3 mb-4">
-              <h1 className="text-2xl sm:text-3xl font-bold text-charcoal leading-snug">
+              <h1
+                dir="auto"
+                className="text-2xl sm:text-3xl font-bold text-charcoal leading-snug"
+              >
                 {name}
               </h1>
               <WishlistButton

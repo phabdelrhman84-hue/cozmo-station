@@ -179,7 +179,10 @@ export default function CartDrawer() {
 
                 {/* Product Info */}
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-sm font-semibold text-charcoal truncate">
+                  <h3
+                    dir="auto"
+                    className="text-sm font-semibold text-charcoal truncate"
+                  >
                     {locale === "ar"
                       ? item.product.name_ar
                       : item.product.name_en}
