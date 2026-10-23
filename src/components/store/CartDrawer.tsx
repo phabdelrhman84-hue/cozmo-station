@@ -1,9 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useCart } from "@/hooks/useCart";
 import { X, Plus, Minus, Trash2, ShoppingBag } from "lucide-react";
 import Link from "next/link";
+import { trackBeginCheckout } from "@/lib/analytics";
+import CartUpsell from "@/components/store/CartUpsell";
 
 export default function CartDrawer() {
   const { locale, t } = useLanguage();
@@ -17,9 +20,36 @@ export default function CartDrawer() {
     closeCart,
   } = useCart();
 
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [checkoutError, setCheckoutError] = useState("");
+
   const freeShippingThreshold = 999;
   const remaining = Math.max(0, freeShippingThreshold - subtotal);
   const progress = Math.min(100, (subtotal / freeShippingThreshold) * 100);
+
+  // ينشئ Shopify Cart ويوجّه العميل لصفحة الدفع بتاعت شوبيفاي مباشرة
+  const handleCheckout = async () => {
+    setIsCheckingOut(true);
+    setCheckoutError("");
+    trackBeginCheckout(items);
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success || !data.checkoutUrl) {
+        throw new Error(data.error || "Checkout failed");
+      }
+      window.location.href = data.checkoutUrl;
+    } catch (err) {
+      setCheckoutError(
+        err instanceof Error ? err.message : "Checkout failed"
+      );
+      setIsCheckingOut(false);
+    }
+  };
 
   return (
     <>
@@ -63,25 +93,47 @@ export default function CartDrawer() {
         {/* Free Shipping Progress */}
         {items.length > 0 && (
           <div className="px-5 py-3 bg-beige-light">
-            <div className="flex justify-between text-sm mb-1">
-              <span className="text-warm-gray">
-                {remaining > 0
-                  ? t("cart.free_shipping_remaining").replace(
-                      "{amount}",
-                      remaining.toLocaleString()
-                    )
-                  : "🎉 " +
-                    (locale === "ar"
-                      ? "مبروك! حصلت على شحن مجاني"
-                      : "Congrats! You got free shipping")}
-              </span>
-            </div>
-            <div className="h-2 bg-beige-dark rounded-full overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-pink to-sage rounded-full transition-all duration-500"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
+            {remaining > 0 ? (
+              <>
+                <div className="flex items-center gap-1.5 text-sm mb-1.5 text-charcoal">
+                  <span>🚚</span>
+                  <span>
+                    {locale === "ar" ? (
+                      <>
+                        باقي{" "}
+                        <strong className="text-pink-dark">
+                          {remaining.toLocaleString()} ج.م
+                        </strong>{" "}
+                        والتوصيل علينا
+                      </>
+                    ) : (
+                      <>
+                        You&apos;re{" "}
+                        <strong className="text-pink-dark">
+                          {remaining.toLocaleString()} EGP
+                        </strong>{" "}
+                        away from free shipping
+                      </>
+                    )}
+                  </span>
+                </div>
+                <div className="h-2 bg-beige-dark rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-pink to-sage rounded-full transition-all duration-700 ease-out"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+              </>
+            ) : (
+              <div className="flex items-center gap-1.5 text-sm font-semibold text-sage">
+                <span>🎉</span>
+                <span>
+                  {locale === "ar"
+                    ? "التوصيل مجاني! جاهزة للدفع"
+                    : "Free shipping unlocked! Ready to check out"}
+                </span>
+              </div>
+            )}
           </div>
         )}
 
@@ -127,7 +179,10 @@ export default function CartDrawer() {
 
                 {/* Product Info */}
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-sm font-semibold text-charcoal truncate">
+                  <h3
+                    dir="auto"
+                    className="text-sm font-semibold text-charcoal truncate"
+                  >
                     {locale === "ar"
                       ? item.product.name_ar
                       : item.product.name_en}
@@ -179,6 +234,9 @@ export default function CartDrawer() {
           )}
         </div>
 
+        {/* Upsell rail */}
+        <CartUpsell />
+
         {/* Footer */}
         {items.length > 0 && (
           <div className="border-t border-beige-dark p-5 space-y-3">
@@ -188,13 +246,20 @@ export default function CartDrawer() {
                 {subtotal.toLocaleString()} {locale === "ar" ? "ج.م" : "EGP"}
               </span>
             </div>
-            <Link
-              href="/checkout"
-              onClick={closeCart}
-              className="btn-primary block w-full text-center text-lg"
+            {checkoutError && (
+              <p className="text-error text-sm text-center">{checkoutError}</p>
+            )}
+            <button
+              onClick={handleCheckout}
+              disabled={isCheckingOut}
+              className="btn-primary flex items-center justify-center w-full text-center text-lg disabled:opacity-60"
             >
-              {t("cart.checkout")}
-            </Link>
+              {isCheckingOut ? (
+                <span className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                t("cart.checkout")
+              )}
+            </button>
              <Link
               href="/products"
               onClick={closeCart}

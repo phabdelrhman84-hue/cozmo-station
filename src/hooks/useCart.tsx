@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import type { CartItem, Product } from "@/types";
+import { trackAddToCart } from "@/lib/analytics";
 
 interface CartContextType {
   items: CartItem[];
@@ -57,6 +58,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       return [...prev, { product, quantity }];
     });
     setIsOpen(true);
+    // حدث add_to_cart لكل مزوّدي التحليلات (بالكمية المضافة فقط)
+    trackAddToCart([{ product, quantity }]);
   }, []);
 
   const removeItem = useCallback((productId: number) => {

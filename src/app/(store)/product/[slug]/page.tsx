@@ -1,13 +1,21 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useCart } from "@/hooks/useCart";
+import { useProducts } from "@/hooks/useProducts";
+import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import ProductCard from "@/components/store/ProductCard";
+import FrequentlyBoughtTogether from "@/components/store/FrequentlyBoughtTogether";
+import StickyAddToCart from "@/components/store/StickyAddToCart";
+import RecentlyViewed from "@/components/store/RecentlyViewed";
+import WishlistButton from "@/components/store/WishlistButton";
 import { getDiscountPercentage } from "@/lib/utils";
-import { getProduct, getShopifyProducts } from "@/lib/shopify";
+import { getProduct } from "@/lib/shopify";
+import { trackViewItem, productToItem } from "@/lib/analytics";
+import type { Product } from "@/types";
 import {
   ShoppingBag,
   Check,
@@ -25,7 +33,9 @@ export default function ProductDetailPage() {
   const slug = decodeURIComponent(params.slug as string);
   const { locale, t } = useLanguage();
   const { addItem } = useCart();
+  const { add: addRecentlyViewed } = useRecentlyViewed();
 
+  const { products: allProducts } = useProducts();
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
@@ -33,7 +43,8 @@ export default function ProductDetailPage() {
     "description"
   );
   const [added, setAdded] = useState(false);
-  const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
+  const [showSticky, setShowSticky] = useState(false);
+  const atcRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -46,22 +57,8 @@ export default function ProductDetailPage() {
 
         if (shopifyProduct) {
           setProduct(shopifyProduct);
-
-          // Fetch related products from Shopify (same category, exclude current)
-          try {
-            const allShopify = await getShopifyProducts(12);
-            const related = allShopify
-              .filter(
-                (p) =>
-                  p.category === shopifyProduct.category &&
-                  p.id !== shopifyProduct.id
-              )
-              .slice(0, 4);
-            if (related.length > 0) setRelatedProducts(related);
-          } catch {
-            // Related products fetch failed — non-critical
-          }
-
+          trackViewItem(productToItem(shopifyProduct, 1));
+          addRecentlyViewed(shopifyProduct);
           setLoading(false);
           return; // ✅ Got product from Shopify
         }
@@ -74,7 +71,26 @@ export default function ProductDetailPage() {
     };
 
     fetchProduct();
-  }, [slug]);
+  }, [slug, addRecentlyViewed]);
+
+  // منتجات مقترحة (نفس التصنيف) من الكاش المشترك
+  const relatedProducts = product
+    ? allProducts
+        .filter((p) => p.category === product.category && p.id !== product.id)
+        .slice(0, 4)
+    : [];
+
+  // إظهار شريط الإضافة الثابت على الموبايل لما الزر الأساسي يخرج من الشاشة
+  useEffect(() => {
+    const el = atcRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setShowSticky(!entry.isIntersecting && entry.boundingClientRect.top < 0),
+      { threshold: 0 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [product]);
 
   if (loading) {
     return (
@@ -136,7 +152,10 @@ export default function ProductDetailPage() {
               {t("nav.products")}
             </Link>
             <span>/</span>
-            <span className="text-charcoal font-medium truncate max-w-[200px]">
+            <span
+              dir="auto"
+              className="text-charcoal font-medium truncate max-w-[200px]"
+            >
               {name}
             </span>
           </div>
@@ -199,9 +218,19 @@ export default function ProductDetailPage() {
             <p className="text-sm text-warm-gray uppercase tracking-wider mb-2">
               {product.brand}
             </p>
-            <h1 className="text-2xl sm:text-3xl font-bold text-charcoal mb-4 leading-snug">
-              {name}
-            </h1>
+            <div className="flex items-start justify-between gap-3 mb-4">
+              <h1
+                dir="auto"
+                className="text-2xl sm:text-3xl font-bold text-charcoal leading-snug"
+              >
+                {name}
+              </h1>
+              <WishlistButton
+                product={product as Product}
+                size={22}
+                className="shrink-0 w-11 h-11 border border-beige-dark hover:border-pink"
+              />
+            </div>
 
             {/* Price */}
             <div className="flex items-center gap-3 mb-6">
@@ -244,7 +273,7 @@ export default function ProductDetailPage() {
             </div>
 
             {/* Quantity + Add to Cart */}
-            <div className="flex items-center gap-4 mb-8">
+            <div ref={atcRef} className="flex items-center gap-4 mb-8">
               <div className="flex items-center bg-white rounded-full border border-beige-dark">
                 <button
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
@@ -366,6 +395,9 @@ export default function ProductDetailPage() {
           </div>
         </div>
 
+        {/* Frequently Bought Together */}
+        <FrequentlyBoughtTogether product={product as Product} />
+
         {/* Related Products */}
         {relatedProducts.length > 0 && (
           <div className="mt-16">
@@ -379,7 +411,18 @@ export default function ProductDetailPage() {
             </div>
           </div>
         )}
+
       </div>
+
+      <RecentlyViewed excludeId={product.id} className="pb-16" />
+
+      <StickyAddToCart
+        product={product as Product}
+        show={showSticky}
+        added={added}
+        disabled={isOutOfStock}
+        onAdd={handleAddToCart}
+      />
     </div>
   );
 }

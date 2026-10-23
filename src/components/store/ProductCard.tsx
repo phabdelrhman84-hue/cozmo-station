@@ -7,6 +7,7 @@ import { ShoppingCart, Check } from "lucide-react";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useCart } from "@/hooks/useCart";
 import { getDiscountPercentage } from "@/lib/utils";
+import WishlistButton from "@/components/store/WishlistButton";
 import type { Product } from "@/types";
 
 interface ProductCardProps {
@@ -53,6 +54,13 @@ export default function ProductCard({ product }: ProductCardProps) {
       {/* ===== حاوية الصورة ===== */}
       <div className="relative w-full aspect-[4/5] bg-[#F9F9F9] overflow-hidden">
 
+        {/* زر المفضلة — أعلى البداية */}
+        <WishlistButton
+          product={product}
+          size={17}
+          className="absolute top-3 start-3 z-10 w-8 h-8 bg-white/90 backdrop-blur-sm shadow-sm hover:bg-white"
+        />
+
         {/* Text Overlays — أعلى يمين بشكل منطقي RTL/LTR */}
         <div className="absolute top-3 end-3 z-10 flex flex-col gap-2 items-end">
           {scienceBadge && (
@@ -95,7 +103,10 @@ export default function ProductCard({ product }: ProductCardProps) {
 
         {/* الاسم */}
         <Link href={`/product/${product.handle || product.slug}`} className="mb-3">
-          <h3 className="font-bold text-charcoal leading-snug line-clamp-2 group-hover:text-pink-dark transition-colors duration-200">
+          <h3
+            dir="auto"
+            className="font-bold text-charcoal leading-snug line-clamp-2 group-hover:text-pink-dark transition-colors duration-200"
+          >
             {name}
           </h3>
         </Link>
