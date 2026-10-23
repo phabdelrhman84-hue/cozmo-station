@@ -1,6 +1,7 @@
 export const metadata = {
   title: 'Sanity Studio',
   description: 'Manage content for Cozmo Station',
+  robots: { index: false, follow: false },
 }
 
 export default function StudioLayout({

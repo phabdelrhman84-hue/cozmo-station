@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Cairo, Inter } from "next/font/google";
 import "./globals.css";
+import { SITE_URL, SITE_NAME } from "@/lib/site";
 
 const cairo = Cairo({
   variable: "--font-cairo",
@@ -15,12 +16,13 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: {
-    default: "Cozmo Station | كوزمو ستيشن - العناية الكورية بالبشرة",
-    template: "%s | Cozmo Station",
+    default: "كوزمو ستيشن | Cozmo Station - العناية بالبشرة والشعر في مصر",
+    template: "%s | كوزمو ستيشن",
   },
   description:
-    "وجهتك الأولى للعناية الكورية بالبشرة في مصر. منتجات أصلية ١٠٠٪ من أشهر الماركات الكورية مع توصيل لجميع المحافظات.",
+    "منتجات العناية بالبشرة والشعر الكورية واليابانية والألمانية في مصر. منتجات أصلية ١٠٠٪ مع توصيل لجميع المحافظات.",
   keywords: [
     "Korean skincare",
     "العناية الكورية",
@@ -34,7 +36,7 @@ export const metadata: Metadata = {
     type: "website",
     locale: "ar_EG",
     alternateLocale: "en_US",
-    siteName: "Cozmo Station",
+    siteName: SITE_NAME,
   },
 };
 

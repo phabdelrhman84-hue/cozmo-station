@@ -30,6 +30,7 @@ export interface Product {
   is_new: boolean;
   is_featured: boolean;
   created_at: string;
+  updated_at?: string;
 }
 
 export interface Order {

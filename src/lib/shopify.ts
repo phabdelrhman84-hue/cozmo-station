@@ -72,6 +72,8 @@ export interface ShopifyProduct {
   images: { edges: { node: ShopifyImage }[] };
   variants: { edges: { node: ShopifyVariant }[] };
   metafields: ({ key: string; value: string } | null)[];
+  seo: { title: string | null; description: string | null };
+  updatedAt: string;
 }
 
 // ───────────────────────────────────────────────────────────
@@ -261,10 +263,10 @@ export function normalizeProduct(shopifyProduct: ShopifyProduct): Product {
     // الـ Slug (handle في Shopify)
     slug: shopifyProduct.handle,
 
-    // SEO Metafields
-    meta_title_ar: null,
+    // SEO — حقل "معاينة نتيجة محرك البحث" في Shopify (بلغة المتجر الأساسية: العربية)
+    meta_title_ar: shopifyProduct.seo?.title || null,
     meta_title_en: null,
-    meta_description_ar: null,
+    meta_description_ar: shopifyProduct.seo?.description || null,
     meta_description_en: null,
 
     // الحالة — متاح للبيع
@@ -273,6 +275,7 @@ export function normalizeProduct(shopifyProduct: ShopifyProduct): Product {
     is_featured: shopifyProduct.tags.includes("featured") || shopifyProduct.tags.includes("best-seller"),
 
     created_at: new Date().toISOString(),
+    updated_at: shopifyProduct.updatedAt,
   };
 }
 
@@ -291,6 +294,8 @@ const PRODUCT_FRAGMENT = `
     vendor
     productType
     tags
+    updatedAt
+    seo { title description }
     priceRange {
       minVariantPrice { amount currencyCode }
       maxVariantPrice { amount currencyCode }
@@ -420,4 +425,47 @@ export async function getShopifyCollectionProducts(
   return response.body.collection.products.edges.map((edge) =>
     normalizeProduct(edge.node)
   );
+}
+
+// ── 4d. كل الـ handles (للـ sitemap) ─────────────────────────
+
+type GetProductHandlesData = {
+  products: {
+    edges: { node: { handle: string; updatedAt: string } }[];
+    pageInfo: { hasNextPage: boolean; endCursor: string | null };
+  };
+};
+
+export async function getAllProductHandles(): Promise<
+  { handle: string; updatedAt: string }[]
+> {
+  const query = `
+    query GetProductHandles($first: Int!, $after: String) {
+      products(first: $first, after: $after) {
+        edges { node { handle updatedAt } }
+        pageInfo { hasNextPage endCursor }
+      }
+    }
+  `;
+
+  const handles: { handle: string; updatedAt: string }[] = [];
+  let after: string | null = null;
+
+  // حد أقصى 20 صفحة × 250 = 5000 منتج
+  for (let page = 0; page < 20; page++) {
+    const response: { body: GetProductHandlesData } | null =
+      await shopifyFetch<GetProductHandlesData>({
+        query,
+        variables: { first: 250, after },
+        revalidate: 3600,
+      });
+    if (!response) break;
+
+    const { edges, pageInfo }: GetProductHandlesData["products"] = response.body.products;
+    handles.push(...edges.map((e) => e.node));
+    if (!pageInfo.hasNextPage) break;
+    after = pageInfo.endCursor;
+  }
+
+  return handles;
 }
